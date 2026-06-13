@@ -73,7 +73,68 @@ sys_ml = control.tf(Hml[0, 0])              # a control.TransferFunction
 ```
 
 A runnable end-to-end demo (with optional plots) is in
-[`examples/tutorial_qlog.py`](examples/tutorial_qlog.py).
+[`examples/tutorial_1_qlog.py`](examples/tutorial_1_qlog.py).
+
+## Examples
+
+All example scripts live in [`examples/`](examples/), save their figures as PNGs
+next to the script, and open interactive windows (set `FDI_NOSHOW=1` to skip the
+windows and only save PNGs).
+
+### Step 1–5 workflow (uses the original measurement data)
+
+Python ports of the MATLAB `Step_1`–`Step_5` examples, running on the original
+`Examples/private/*.mat` data:
+
+| script | MATLAB original | data used |
+|---|---|---|
+| `step1_excitation_design.py` | `Step_1_ExcitationDesign.m` | – (signal design only) |
+| `step2_nonparametric_frf.py` | `Step_2_NonparametricFRF.m` | `MultisineTypeA.mat` |
+| `step3_nonlinear_distortions.py` | `Step_3_NonlinearDistortions.m` | `MultisineTypeB.mat` |
+| `step4_parametric_estimation.py` | `Step_4_ParametricEstimation.m` | `MultisineTypeA.mat` |
+| `step5_selection_validation.py` | `Step_5_SelectionValidation.m` | `MultisineTypeA.mat` |
+
+`MultisineTypeA/B.mat` are read directly with SciPy (see
+[`examples/_data.py`](examples/_data.py)) — **no MATLAB required**.
+
+```bash
+python examples/step2_nonparametric_frf.py
+```
+
+### Tutorials (use the benchmark plant `mdl.Pv(1,1)`)
+
+Python ports of the MATLAB `Tutorial_*` examples:
+
+| script | MATLAB original | notes |
+|---|---|---|
+| `tutorial_1_random.py` | `Tutorial_1_random.m` | random noise, Welch FRF (SciPy) + NLS fit |
+| `tutorial_1_chirp.py` | `Tutorial_1_chirp.m` | swept sine, periodic H1 + NLS fit |
+| `tutorial_1_qlog.py` | `Tutorial_1_qlog.m` | quasi-log multisine, full estimator panel |
+| `tutorial_2_iterative.py` | `Tutorial_2_iterative.m` | 3 experiments combined with `fcat_fdi`/`fdel_fdi` |
+| `tutorial_3_nonlinear_in.py` | `Tutorial_3_nonlinear_in.m` | input polynomial non-linearity |
+| `tutorial_3_nonlinear_out.py` | `Tutorial_3_nonlinear_out.m` | output-feedback non-linearity (the Simulink `model_nl_out.slx` reproduced as a state-space ODE) |
+
+These need the benchmark plant.  Until you convert it (below) they fall back to a
+synthetic stand-in plant and print a note.
+
+### Benchmark model `20160829_ident.mat`
+
+This file stores MATLAB *control objects* (`mdl.Pv` is a 2×1 `zpk`, `mdl.Pp` too)
+that SciPy cannot read.  Convert it **once in MATLAB** to plain state-space data:
+
+```matlab
+>> cd Examples/private
+>> convert_ident_to_python      % writes ident_python.mat
+```
+
+After that the tutorials automatically use the real `mdl.Pv(1,1)`.  You can also
+load it directly:
+
+```python
+from examples._data import load_ident, benchmark_plant
+P0 = load_ident("Pv", (0, 0))   # control.StateSpace, == MATLAB mdl.Pv(1,1)
+P0, label = benchmark_plant()   # real model if converted, else synthetic
+```
 
 ## API conventions
 

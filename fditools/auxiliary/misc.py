@@ -42,8 +42,13 @@ def t2f(x, N=None):
 
 
 def dbm(X):
-    """Magnitude in decibels: ``20*log10(abs(X))``."""
-    return 20.0 * np.log10(np.abs(np.asarray(X)))
+    """Magnitude in decibels: ``20*log10(abs(X))``.
+
+    Non-excited spectral lines may be exactly zero; those map to ``-inf`` (and
+    are simply not drawn when plotted), so the log-of-zero warning is silenced.
+    """
+    with np.errstate(divide="ignore"):
+        return 20.0 * np.log10(np.abs(np.asarray(X)))
 
 
 def phs(X, shift_removal=True, glitch=None):
