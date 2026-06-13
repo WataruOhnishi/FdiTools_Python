@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fditools"
+version = "0.1.0"
+description = "Frequency Domain System Identification Toolbox (Python port of FdiTools)"
+readme = "README_python.md"
+requires-python = ">=3.9"
+license = { text = "BSD-2-Clause" }
+authors = [
+    { name = "Thomas Beauduin" },
+    { name = "Wataru Ohnishi" },
+]
+keywords = ["system-identification", "frequency-domain", "frf", "multisine", "control"]
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+    "control>=0.9.2",
+]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.4"]
+test = ["pytest>=7.0", "matplotlib>=3.4"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fditools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

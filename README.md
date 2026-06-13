@@ -6,6 +6,8 @@ Frequency Domain System Identification MATLAB Toolbox.
 Main reference:<br>
 R. Pintelon and J. Schoukens, System Identification: A Frequency Domain Approach, 2nd ed. Wiley-IEEE Press, 2012.
 
+> **Python port:** a Python implementation of this toolbox (built on numpy / scipy / python-control) lives in [`fditools/`](fditools/). See [README_python.md](README_python.md) for installation and usage.
+
 ## Installation 
 addpath `src` to MATLAB
 ### Requred toolbox
