@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "fditools"
 version = "0.1.0"
 description = "Frequency Domain System Identification Toolbox (Python port of FdiTools)"
-readme = "README_python.md"
+readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "BSD-2-Clause" }
 authors = [

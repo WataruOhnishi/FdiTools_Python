@@ -8,7 +8,7 @@
 % examples/_data.py:load_ident() reads.
 %
 % Usage (in MATLAB, from this folder):
-%   >> cd Examples/private
+%   >> cd MATLAB/Examples/private
 %   >> convert_ident_to_python
 %
 % Author: Wataru Ohnishi / FdiTools Python port

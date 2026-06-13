@@ -1,8 +1,8 @@
-"""Tutorial 1 (qlog) - Python port of ``Examples/Tutorial_1_qlog.m``.
+"""Tutorial 1 (qlog) - Python port of ``MATLAB/Examples/Tutorial_1_qlog.m``.
 
 Quasi-log multisine identification of the benchmark plant (``mdl.Pv(1,1)``).
 Falls back to a synthetic plant if the model has not been converted yet
-(see ``Examples/private/convert_ident_to_python.m``).
+(see ``MATLAB/Examples/private/convert_ident_to_python.m``).
 """
 
 import numpy as np

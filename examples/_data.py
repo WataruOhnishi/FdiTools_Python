@@ -4,7 +4,7 @@
 numeric arrays and parameter structs are read directly with SciPy — no MATLAB
 needed.  The benchmark model ``20160829_ident.mat`` instead stores MATLAB
 *control objects* (``ss``/``tf``) that SciPy cannot reconstruct; convert it once
-with ``Examples/private/convert_ident_to_python.m`` (see :func:`load_ident`).
+with ``MATLAB/Examples/private/convert_ident_to_python.m`` (see :func:`load_ident`).
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import numpy as np
 import scipy.io as sio
 
 _PRIV = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                     "Examples", "private")
+                     "MATLAB", "Examples", "private")
 
 
 def _matpath(name):
@@ -71,9 +71,10 @@ def load_typeB():
 def load_ident(channel="Pv", which=(0, 0)):
     """Load the benchmark plant, converted from ``20160829_ident.mat``.
 
-    Run ``Examples/private/convert_ident_to_python.m`` in MATLAB first; it writes
-    ``Examples/private/ident_python.mat`` with the state-space data.  Returns a
-    ``control.StateSpace`` for the requested entry (default ``Pv(1,1)``).
+    Run ``MATLAB/Examples/private/convert_ident_to_python.m`` in MATLAB first; it
+    writes ``MATLAB/Examples/private/ident_python.mat`` with the state-space
+    data.  Returns a ``control.StateSpace`` for the requested entry (default
+    ``Pv(1,1)``).
     """
     import control
 
@@ -81,8 +82,8 @@ def load_ident(channel="Pv", which=(0, 0)):
     if not os.path.exists(path):
         raise FileNotFoundError(
             "ident_python.mat not found. Convert the benchmark model once in "
-            "MATLAB:\n    >> cd Examples/private\n    >> convert_ident_to_python\n"
-            "(script provided at Examples/private/convert_ident_to_python.m)")
+            "MATLAB:\n    >> cd MATLAB/Examples/private\n    >> convert_ident_to_python\n"
+            "(script at MATLAB/Examples/private/convert_ident_to_python.m)")
     d = sio.loadmat(path, struct_as_record=False, squeeze_me=True)
     models = d["models"]
     o, i = which
@@ -113,13 +114,13 @@ def benchmark_plant(channel="Pv", which=(0, 0)):
     """Return ``(P0, label)`` — the benchmark plant if it has been converted,
     otherwise a synthetic stand-in (so the tutorials always run).
 
-    Convert once in MATLAB with ``Examples/private/convert_ident_to_python.m``
+    Convert once in MATLAB with ``MATLAB/Examples/private/convert_ident_to_python.m``
     to use the real ``mdl.Pv(1,1)`` model.
     """
     try:
         return load_ident(channel, which), "benchmark 20160829_ident.mat"
     except FileNotFoundError:
         print("[note] ident_python.mat not found -> using a synthetic plant.\n"
-              "       Run  Examples/private/convert_ident_to_python.m  in MATLAB\n"
+              "       Run  MATLAB/Examples/private/convert_ident_to_python.m  in MATLAB\n"
               "       to identify against the real benchmark model.")
         return _synthetic_plant(), "synthetic stand-in"
