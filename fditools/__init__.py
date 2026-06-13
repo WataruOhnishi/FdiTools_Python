@@ -14,7 +14,7 @@ Module map (MATLAB folder -> Python subpackage)
 * ``3_NonlinearDistortions``-> :mod:`fditools.nonlinear`
 * ``4_ParametricEstimation``-> :mod:`fditools.parametric`
 * ``5_SelectionValidation`` -> :mod:`fditools.validation`
-* ``A_CalculationAuxiliary``-> :mod:`fditools.aux`
+* ``A_CalculationAuxiliary``-> :mod:`fditools.auxiliary`
 """
 
 from .frfdata import FrfData, UserData
@@ -39,8 +39,9 @@ from .parametric import (lsfdi, wlsfdi, nlsfdi, mlfdi, gtlsfdi, btlsfdi, ssfdi,
 from .validation import chi2test, costtest, residtest
 
 # Calculation auxiliary
-from .aux import (ba2theta, theta2ba, ba2hm, hm2ba, tfdata, vectorize_orders,
-                  f2t, t2f, dbm, phs, hfrf, cr_rao, fdicohere, fdel_fdi, fcat_fdi)
+from .auxiliary import (ba2theta, theta2ba, ba2hm, hm2ba, tfdata, vectorize_orders,
+                        f2t, t2f, dbm, phs, hfrf, cr_rao, fdicohere, fdel_fdi,
+                        fcat_fdi)
 
 __version__ = "0.1.0"
 
@@ -60,6 +61,6 @@ __all__ = [
 
 
 def bode_fdi(*args, **kwargs):
-    """Lazy wrapper around :func:`fditools.aux.plotting.bode_fdi` (needs matplotlib)."""
-    from .aux.plotting import bode_fdi as _bode_fdi
+    """Lazy wrapper around :func:`fditools.auxiliary.plotting.bode_fdi` (needs matplotlib)."""
+    from .auxiliary.plotting import bode_fdi as _bode_fdi
     return _bode_fdi(*args, **kwargs)

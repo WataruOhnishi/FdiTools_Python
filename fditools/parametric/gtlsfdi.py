@@ -13,7 +13,7 @@ import warnings
 import numpy as np
 import scipy.linalg as sla
 
-from ..aux.conversions import theta2ba, ba2hm, vectorize_orders
+from ..auxiliary.conversions import theta2ba, ba2hm, vectorize_orders
 from ._residuals import waxis_of, qsvd
 
 

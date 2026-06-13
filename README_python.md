@@ -36,7 +36,7 @@ pytest
 | `3_NonlinearDistortions` | `fditools.nonlinear` | `time2bla`, `time2nld` |
 | `4_ParametricEstimation` | `fditools.parametric` | `lsfdi`, `wlsfdi`, `nlsfdi`, `mlfdi`, `gtlsfdi`, `btlsfdi`, `ssfdi` |
 | `5_SelectionValidation` | `fditools.validation` | `chi2test`, `costtest`, `residtest` |
-| `A_CalculationAuxiliary` | `fditools.aux` | `ba2theta`, `theta2ba`, `ba2hm`, `hm2ba`, `hfrf`, `cr_rao`, `f2t`, `t2f`, `dbm`, `phs`, `fdel_fdi`, `fcat_fdi`, `fdicohere`, `bode_fdi` |
+| `A_CalculationAuxiliary` | `fditools.auxiliary` | `ba2theta`, `theta2ba`, `ba2hm`, `hm2ba`, `hfrf`, `cr_rao`, `f2t`, `t2f`, `dbm`, `phs`, `fdel_fdi`, `fcat_fdi`, `fdicohere`, `bode_fdi` |
 
 All names are also re-exported at the top level, e.g. `import fditools as fdi; fdi.multisine(...)`.
 

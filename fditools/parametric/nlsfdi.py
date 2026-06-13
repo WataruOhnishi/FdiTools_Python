@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..frfdata import FrfData
-from ..aux.conversions import theta2ba, ba2theta, ba2hm, hm2ba, vectorize_orders
+from ..auxiliary.conversions import theta2ba, ba2theta, ba2hm, hm2ba, vectorize_orders
 from .wlsfdi import wlsfdi
 from ._residuals import nlsfdi_res
 

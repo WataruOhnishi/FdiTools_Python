@@ -3,7 +3,7 @@ import control
 import pytest
 
 import fditools as fdi
-from fditools.aux.misc import f2t, t2f
+from fditools.auxiliary.misc import f2t, t2f
 
 
 def test_multisine_basic_shapes_and_real():

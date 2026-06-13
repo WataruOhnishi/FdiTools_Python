@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import control
 
-from ..aux.conversions import tfdata
+from ..auxiliary.conversions import tfdata
 
 
 def models_list(SYS):

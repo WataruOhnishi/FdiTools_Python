@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..aux.misc import f2t
+from ..auxiliary.misc import f2t
 
 
 def effval(X, Fe=None):

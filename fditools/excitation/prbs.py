@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..aux.misc import t2f
+from ..auxiliary.misc import t2f
 
 # maximum-length LFSR feedback taps (1-based register positions)
 _TAPS = {

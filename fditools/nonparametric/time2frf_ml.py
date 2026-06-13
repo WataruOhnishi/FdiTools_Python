@@ -13,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..frfdata import FrfData, UserData
-from ..aux.frfutils import fdicohere
+from ..auxiliary.frfutils import fdicohere
 
 
 def _as2d(a):

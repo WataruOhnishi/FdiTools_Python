@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from ..frfdata import FrfData
-from ..aux.conversions import theta2ba, ba2theta, ba2hm, hm2ba, vectorize_orders
+from ..auxiliary.conversions import theta2ba, ba2theta, ba2hm, hm2ba, vectorize_orders
 from ._residuals import waxis_of, qsvd, btlsfdi_res
 from .gtlsfdi import gtlsfdi, _chol_block, _solve_qsvd, _as2d
 

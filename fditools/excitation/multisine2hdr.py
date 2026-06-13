@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from ..frfdata import FrfData
-from ..aux.conversions import tfdata
+from ..auxiliary.conversions import tfdata
 
 
 def _peak2rms(sig):

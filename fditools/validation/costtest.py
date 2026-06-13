@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from ._common import models_list, denom_order
-from ..aux.conversions import tfdata
+from ..auxiliary.conversions import tfdata
 from ..parametric._residuals import fdicost
 
 

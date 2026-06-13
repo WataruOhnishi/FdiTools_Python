@@ -16,8 +16,8 @@ from scipy.linalg import hadamard
 import control
 
 from ..frfdata import FrfData
-from ..aux.misc import f2t
-from ..aux.conversions import tfdata
+from ..auxiliary.misc import f2t
+from ..auxiliary.conversions import tfdata
 from ._helpers import lin2qlog, randph, schroed, msinl2p, effval, lpnorm
 
 
