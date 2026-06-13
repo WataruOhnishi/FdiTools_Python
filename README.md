@@ -10,23 +10,140 @@ It mirrors the original MATLAB API and algorithms on top of [`numpy`](https://nu
 
 ## Installation
 
+You need **Python 3.9+**.  The toolbox depends on `numpy`, `scipy` and
+`python-control` (and `matplotlib` for plotting).  The recommended setup uses a
+*virtual environment* (`venv`) — a self-contained Python just for this project,
+so it never interferes with other Python installs.  Total time: a couple of
+minutes.
+
+> **Windows note:** if typing `python` opens the Microsoft Store, Python is not
+> actually installed. Install it from
+> [python.org](https://www.python.org/downloads/) (tick *“Add python.exe to
+> PATH”*) or run `winget install Python.Python.3.12`, then use the `py` launcher
+> shown below.
+
+### 1. Get the code
+
 ```bash
-pip install numpy scipy control            # runtime dependencies
-pip install matplotlib                      # optional, for bode_fdi plotting
+git clone https://github.com/HoriFujimotoLab/FdiTools_Python.git
+cd FdiTools_Python
 ```
 
-Then install the package (from the repository root):
+### 2. Create and activate a virtual environment
 
-```bash
-pip install -e .
+Windows (PowerShell):
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1        # the prompt then shows (.venv)
 ```
 
-Run the test suite:
+macOS / Linux:
 
 ```bash
-pip install pytest
-pytest
+python3 -m venv .venv
+source .venv/bin/activate
 ```
+
+> If PowerShell refuses to run `Activate.ps1`, either run once
+> `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or skip activation and
+> just call `.\.venv\Scripts\python.exe ...` directly in the commands below.
+
+### 3. Install the toolbox
+
+```bash
+pip install -e .          # fditools + numpy / scipy / control
+pip install -e ".[test]"  # also pytest + matplotlib (needed for examples & tests)
+```
+
+`-e` (*editable*) means changes you make to the source take effect immediately —
+handy while developing.  This step also makes `import fditools` work from **any**
+directory (it is the Python equivalent of MATLAB's `addpath`; see
+[*How importing works*](#how-importing-works-the-path-question)).
+
+### 4. Check that it works
+
+```bash
+python -c "import fditools; print(fditools.__version__)"   # -> 0.1.0
+pytest                                                     # 36 tests should pass
+python examples/step2_nonparametric_frf.py                 # runs an example
+```
+
+### Using it in VS Code
+
+Open the `FdiTools_Python` folder, install the **Python** extension (Microsoft),
+then `Ctrl+Shift+P → Python: Select Interpreter` and choose the `.venv` one.
+New terminals then activate `.venv` automatically, and the ▷ *Run* button uses it.
+
+### How importing works (the "path" question)
+
+Unlike MATLAB's `addpath`, you don't add a folder to a search path.  Instead
+`pip install` registers the **`fditools` package** with your environment, so
+`import fditools` works anywhere within that venv — no per-script setup.
+
+If you prefer **not** to install, you can instead add the repository root (the
+folder that *contains* `fditools/`, not `fditools/` itself) to `sys.path`:
+
+```python
+import sys
+sys.path.insert(0, r"C:\path\to\FdiTools_Python")   # folder that holds fditools/
+import fditools
+```
+
+Either way, remember a venv is per-project and per-machine: on a new clone or a
+new computer, repeat steps 2–3 (the `.venv` folder itself is **not** committed to
+git).
+
+## Using it in a Jupyter notebook
+
+The toolbox works the same in notebooks. Install Jupyter **into the project's
+`.venv`** (so it can see `fditools`):
+
+```bash
+pip install jupyterlab ipykernel      # once, with the venv active
+jupyter lab                           # opens in your browser
+```
+
+Or in **VS Code**: create a `.ipynb` file, click *Select Kernel* (top-right) and
+choose the `.venv` interpreter — nothing else to install.
+
+In a notebook, figures render **inline** automatically — no `plt.show()` and no
+blocking window:
+
+```python
+import numpy as np, control, fditools as fdi
+
+P0 = control.tf([(2*np.pi*120)**2], [1, 2*0.02*2*np.pi*120, (2*np.pi*120)**2])
+harm = dict(fs=2000.0, df=1.0, fl=5.0, fh=400.0, fr=1.02)
+ms = fdi.multisine(harm, control.tf([1], [1]),
+                   dict(itp="r", ctp="c", dtp="f", gtp="q"))
+
+u = np.tile(np.squeeze(ms.x[0, 0, :]), 6)
+t = np.arange(u.size) / harm["fs"]
+y = control.forced_response(P0, t, u).outputs
+
+x, _ = fdi.pretreat(u, ms.nrofs, harm["fs"], 1, 0)
+y, _ = fdi.pretreat(y, ms.nrofs, harm["fs"], 1, 0)
+Pest = fdi.time2frf_ml(x, y, ms)
+fig, _ = fdi.bode_fdi(Pest)            # displays inline
+```
+
+> To reuse the helpers in `examples/` from a notebook (e.g.
+> `from _data import benchmark_plant`), add that folder to the path first:
+> `import sys; sys.path.insert(0, "examples")`.
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| Typing `python` opens the Microsoft Store | The real Python isn't on `PATH`. Use `py`, or the venv's `.\.venv\Scripts\python.exe`; or turn off *Settings → Apps → Advanced app settings → App execution aliases → `python.exe`/`python3.exe`*. |
+| `ModuleNotFoundError: No module named 'fditools'` | The active interpreter isn't the one where you ran `pip install -e .`. Activate the venv (or pick `.venv` in VS Code) and re-run `pip install -e .`. |
+| PowerShell: *“Activate.ps1 cannot be loaded … running scripts is disabled”* | Run once `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or skip activation and call `.\.venv\Scripts\python.exe` directly. |
+| A script "hangs" / the terminal won't accept the next command | `plt.show()` **blocks until you close the figure window**. Close the window (don't press Ctrl+C), or set `FDI_NOSHOW=1` to only save PNGs. |
+| `ModuleNotFoundError: No module named '_data'` when running an example | Run it as `python examples/<name>.py` (the script's own folder is what makes `_data`/`_plot` importable). |
+| `FileNotFoundError: ident_python.mat not found` | Only the tutorials need it. Convert once in MATLAB (`cd MATLAB/Examples/private; convert_ident_to_python`), or let the tutorials fall back to the synthetic plant. |
+| No figure window appears at all | Make sure `matplotlib` is installed (`pip install matplotlib`) and you run a **`.py` file** (the ▷ *Run Python File* button), not "Run Selection in Interactive Window". In notebooks, figures are inline. |
+| `pytest` warns *“could not create cache path … [WinError 123]”* | Harmless — run `pytest` from the repository root, or ignore it; the tests still pass. |
 
 ## Module map
 
