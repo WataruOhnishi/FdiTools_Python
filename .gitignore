@@ -13,9 +13,8 @@ dist/
 .venv/
 venv/
 
-### Generated example figures and converted data
+### Generated example figures
 examples/*.png
-MATLAB/Examples/private/ident_python.mat
 
 ### Matlab
 *.asv

@@ -25,7 +25,7 @@ minutes.
 ### 1. Get the code
 
 ```bash
-git clone https://github.com/HoriFujimotoLab/FdiTools_Python.git
+git clone https://github.com/WataruOhnishi/FdiTools_Python.git
 cd FdiTools_Python
 ```
 
@@ -141,7 +141,7 @@ fig, _ = fdi.bode_fdi(Pest)            # displays inline
 | PowerShell: *“Activate.ps1 cannot be loaded … running scripts is disabled”* | Run once `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, or skip activation and call `.\.venv\Scripts\python.exe` directly. |
 | A script "hangs" / the terminal won't accept the next command | `plt.show()` **blocks until you close the figure window**. Close the window (don't press Ctrl+C), or set `FDI_NOSHOW=1` to only save PNGs. |
 | `ModuleNotFoundError: No module named '_data'` when running an example | Run it as `python examples/<name>.py` (the script's own folder is what makes `_data`/`_plot` importable). |
-| `FileNotFoundError: ident_python.mat not found` | Only the tutorials need it. Convert once in MATLAB (`cd MATLAB/Examples/private; convert_ident_to_python`), or let the tutorials fall back to the synthetic plant. |
+| `FileNotFoundError: ident_python.mat not found` | Normally can't happen — the converted model is committed to the repo. Only occurs if that file was deleted; regenerate it in MATLAB (`cd MATLAB/Examples/private; convert_ident_to_python`). Tutorials also fall back to a synthetic plant via `benchmark_plant()`. |
 | No figure window appears at all | Make sure `matplotlib` is installed (`pip install matplotlib`) and you run a **`.py` file** (the ▷ *Run Python File* button), not "Run Selection in Interactive Window". In notebooks, figures are inline. |
 | `pytest` warns *“could not create cache path … [WinError 123]”* | Harmless — run `pytest` from the repository root, or ignore it; the tests still pass. |
 
@@ -254,8 +254,10 @@ measurement data (`MATLAB/Examples/private/*.mat`, read directly with SciPy —
 ### Tutorials
 
 Ported from MATLAB `Tutorial_*`; they identify the benchmark plant `mdl.Pv(1,1)`.
-Until you convert it (see below) they fall back to a synthetic stand-in plant and
-print a note.  (Figures below use the real benchmark model.)
+The converted model (`MATLAB/Examples/private/ident_python.mat`) is **included in
+the repository**, so these run with the real plant out of the box — **no MATLAB
+needed**.  (If that file is ever missing they fall back to a synthetic stand-in
+and print a note.)
 
 **Tutorial 1 — random noise** &nbsp;(`tutorial_1_random.py`): Welch FRF (SciPy) + NLS fit.
 
@@ -283,16 +285,20 @@ print a note.  (Figures below use the real benchmark model.)
 
 ### Benchmark model `20160829_ident.mat`
 
-This file stores MATLAB *control objects* (`mdl.Pv` is a 2×1 `zpk`, `mdl.Pp` too)
-that SciPy cannot read.  Convert it **once in MATLAB** to plain state-space data:
+The original `20160829_ident.mat` stores MATLAB *control objects* (`mdl.Pv` is a
+2×1 `zpk`, `mdl.Pp` too) that SciPy cannot read.  It has already been converted to
+a SciPy-readable state-space file, **`MATLAB/Examples/private/ident_python.mat`,
+which is committed to the repo** — so you can run everything without MATLAB.
+
+You only need MATLAB if you want to **regenerate** that file (e.g. after changing
+the source model):
 
 ```matlab
 >> cd MATLAB/Examples/private
->> convert_ident_to_python      % writes ident_python.mat
+>> convert_ident_to_python      % rewrites ident_python.mat
 ```
 
-After that the tutorials automatically use the real `mdl.Pv(1,1)`.  Load it
-directly with:
+Load the plant directly with:
 
 ```python
 from examples._data import load_ident, benchmark_plant
