@@ -19,6 +19,7 @@ examples/*.png
 ### Matlab
 *.asv
 *.mex*
+*.slxc
 slprj/
 
 ### Embedded Source

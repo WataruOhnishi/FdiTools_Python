@@ -84,7 +84,9 @@ def time2frf_ml(x, y, ms=None, *, fs=None, fl=None, fh=None, df=None,
                           + sY2[:, o] / np.abs(Ys[:, o]) ** 2
                           - 2.0 * np.real(cXY[:, h] / (np.conj(Xs[:, i]) * Ys[:, o])))
                 sCR[:, h] = np.sqrt(np.abs(FRFs[:, h]) ** 2 * common)
-                sGhat[:, h] = np.sqrt(np.abs(FRFs[:, h]) ** 2 / nrofp * common)
+                # sGhat: upstream fix "correct sGhat"
+                # (HoriFujimotoLab/FdiTools @3307555) -> sqrt(2) * sCR
+                sGhat[:, h] = np.sqrt(2.0) * sCR[:, h]
 
     # ----- noise FFT (2-period blocks, in-between lines) ------------------
     nph = nrofp // 2
