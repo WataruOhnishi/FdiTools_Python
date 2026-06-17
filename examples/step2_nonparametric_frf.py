@@ -38,11 +38,11 @@ def main():
     # non-parametric ML estimation
     Pest = fdi.time2frf_ml(x, y, ms, flagTime=True)
 
-    fig1, _ = fdi.bode_fdi(Pest[0, 0], noise=(Pest.freq, Pest.userdata.sGhat[:, 0]),
-                           title="Motor-side FRF", labels=["FRF", "sGhat"])
+    fig1, _ = fdi.bode_fdi(Pest[0, 0], unc=(Pest.freq, Pest.userdata.sG[:, 0]),
+                           title="Motor-side FRF", legend=["FRF", "sG"])
     save_fig(fig1, "step2_frf_motor.png")
-    fig2, _ = fdi.bode_fdi(Pest[1, 0], noise=(Pest.freq, Pest.userdata.sGhat[:, 1]),
-                           title="Load-side FRF", labels=["FRF", "sGhat"])
+    fig2, _ = fdi.bode_fdi(Pest[1, 0], unc=(Pest.freq, Pest.userdata.sG[:, 1]),
+                           title="Load-side FRF", legend=["FRF", "sG"])
     save_fig(fig2, "step2_frf_load.png")
 
     show()

@@ -150,13 +150,29 @@ fig, _ = fdi.bode_fdi(Pest)            # displays inline
 | MATLAB folder | Python subpackage | Contents |
 |---|---|---|
 | `1_ExcitationDesign` | `fditools.excitation` | `multisine`, `sweptsine`, `prbs`, `multisine2hdr`, phase helpers |
-| `2_NonparametricFRF` | `fditools.nonparametric` | `pretreat`, `time2frf_ml`, `time2frf_h1`, `time2frf_log`, `splinefit` |
-| `3_NonlinearDistortions` | `fditools.nonlinear` | `time2bla`, `time2nld` |
-| `4_ParametricEstimation` | `fditools.parametric` | `lsfdi`, `wlsfdi`, `nlsfdi`, `mlfdi`, `gtlsfdi`, `btlsfdi`, `ssfdi` |
+| `2_NonparametricFRF` | `fditools.nonparametric` | `pretreat`, `time2frf_ml`, **`time2frf_lpm`**, `time2frf_h1`, `time2frf_log`, `splinefit` |
+| `3_NonlinearDistortions` | `fditools.nonlinear` | `time2bla`, **`time2bla_mimo`**, `time2nld` |
+| `4_ParametricEstimation` | `fditools.parametric` | `lsfdi`, `wlsfdi`, `nlsfdi`, `mlfdi`, `gtlsfdi`, `btlsfdi`, `ssfdi`, **`frf2modal`** |
 | `5_SelectionValidation` | `fditools.validation` | `chi2test`, `costtest`, `residtest` |
-| `A_CalculationAuxiliary` | `fditools.auxiliary` | `ba2theta`, `theta2ba`, `ba2hm`, `hm2ba`, `hfrf`, `cr_rao`, `f2t`, `t2f`, `dbm`, `phs`, `fdel_fdi`, `fcat_fdi`, `fdicohere`, `bode_fdi` |
+| `A_CalculationAuxiliary` | `fditools.auxiliary` | `ba2theta`, `theta2ba`, `ba2hm`, `hm2ba`, `hfrf`, `cr_rao`, **`frfconf`**, `f2t`, `t2f`, `dbm`, `phs`, `fdel_fdi`, `fcat_fdi`, `fdicohere`, `bode_fdi` |
 
 All names are also re-exported at the top level, e.g. `import fditools as fdi; fdi.multisine(...)`.
+
+### What's new in v3.0
+
+* **`time2frf_lpm`** — Local Polynomial Method: estimates the FRF *and* the
+  transient, so short, transient-corrupted records give low-bias FRFs (periodic
+  or broadband; SISO/SIMO and orthogonal-multisine MIMO).
+* **`frf2modal`** — structured (rank-one residue) MIMO modal identification,
+  proportional or general (viscous) damping; returns modal parameters and a real
+  `control.StateSpace`.
+* **MIMO** throughout `time2frf_ml` / `time2frf_lpm` / `time2bla_mimo` via
+  orthogonal multiple-experiment (or single zippered) multisines — pass the
+  experiments as a `(N, nch, ne)` array.
+* **`frfconf`** — confidence-radius factor (PS2012 eq.2-40); **`bode_fdi`** gains
+  uncertainty `line`/`band` overlays.
+* The FRF standard deviation is now `UserData.sG` (`= sqrt(2)*sCR`, was `sGhat`);
+  `UserData.nrofp` (averaged periods) and `UserData.method` are also stored.
 
 ## Repository layout
 
@@ -283,6 +299,20 @@ and print a note.)
 
 ![Tutorial 3 output](docs/img/tutorial_3_nonlinear_out.png)
 
+### v3.0 features
+
+**LPM** &nbsp;(`tutorial_lpm.py`): on a short, transient-corrupted record the
+Local Polynomial Method models the transient and stays low-bias, while plain ML
+(no transient removal) is biased by leakage.
+
+![LPM tutorial](docs/img/tutorial_lpm.png)
+
+**MIMO + modal** &nbsp;(`tutorial_4_mimo.py`): a 2x2 plant identified from an
+orthogonal 2-input multisine with `time2frf_ml`/`time2frf_lpm`, then `frf2modal`
+recovers the modal parameters and a real state-space model.
+
+![MIMO tutorial](docs/img/tutorial_4_mimo.png)
+
 ### Benchmark model `20160829_ident.mat`
 
 The original `20160829_ident.mat` stores MATLAB *control objects* (`mdl.Pv` is a
@@ -313,7 +343,7 @@ P0, label = benchmark_plant()   # real model if converted, else synthetic
   MATLAB `Hm(o, i)`.
 * **`FrfData`** replaces the MATLAB `frd` object enriched with `UserData`.
   `Pest.freq` (Hz), `Pest.response` (`(nrofo, nrofi, nroff)`), `Pest.userdata`
-  (`.X`, `.Y`, `.sX2`, `.sY2`, `.cXY`, `.sCR`, `.sGhat`, `.FRFn`, `.ms` ...).
+  (`.X`, `.Y`, `.sX2`, `.sY2`, `.cXY`, `.sCR`, `.sG`, `.nrofp`, `.FRFn`, `.ms` ...).
   Use `Pest.frf_columns()` for the `(nroff, nrofh)` matrix and `Pest.to_frd()`
   for a genuine `control.FrequencyResponseData`.
 * **Dual calling convention**: the iterative estimators accept either a `FrfData`
@@ -322,6 +352,13 @@ P0, label = benchmark_plant()   # real model if converted, else synthetic
   function; a `(nrofo, nrofi)` array follows the MATLAB column-major convention.
 * **`SYS` for validation tests** is a `dict` mapping a model name to a transfer
   function array, replacing the MATLAB struct.
+* **MIMO** (v3.0): pass the experiments as a `(N, nch, ne)` array to
+  `time2frf_ml`/`time2frf_lpm`; the result is an `(ny, nu, nl)` `FrfData` with
+  `UserData.sG` of shape `(ny, nu, nl)` and `UserData.method`
+  (`'orthogonal'`/`'zippered'`/`'lpm'`). `time2bla_mimo` returns a `dict`.
+* **`bode_fdi`** (v3.0 signature): `bode_fdi(sys, unc=..., sigma=..,
+  style='line'|'band', legend=[...], ...)` — `unc` is a UserData field name,
+  an `(freq, mag)` pair, or a magnitude vector.
 
 ## Known limitations vs. the MATLAB toolbox
 
@@ -337,8 +374,14 @@ P0, label = benchmark_plant()   # real model if converted, else synthetic
 * **`gtlsfdi`/`btlsfdi`** faithfully reproduce the original `try chol(A)…catch`
   behaviour (the `catch` branch always runs) so results match MATLAB.
 * **Plotting** (`bode_fdi`) requires `matplotlib` and is imported lazily.
-* True MIMO (`nrofi > 1` *and* `nrofo > 1`) follows the original code's index
-  conventions, which are exercised mainly for SISO/SIMO/MISO in the toolbox.
+* **`frf2modal`** proportional damping uses real mode shapes throughout (the
+  correct structure for proportional damping); the general path keeps complex
+  shapes as in MATLAB.
+* The **zippered single-experiment LPM** (`nu>1`, one experiment) is not ported —
+  use the orthogonal multiple-experiment design for MIMO LPM (recommended for
+  sharp modes). The zippered path of `time2frf_ml` *is* available.
+* The MATLAB **`iodata`** OO container is intentionally not reproduced; MIMO is
+  handled function-style by passing `(N, nch, ne)` arrays.
 
 ## License
 

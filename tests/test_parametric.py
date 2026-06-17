@@ -70,6 +70,30 @@ def test_classical_and_structured_mlfdi_agree(measurement):
     assert np.allclose(bs, bc, atol=1e-8)
 
 
+def test_frf2modal_recovers_modes():
+    ny = nu = 2
+    f = np.linspace(1, 300, 600)
+    s = 1j * 2 * np.pi * f
+    modes = [(2 * np.pi * 50, 0.01, np.array([1.0, 0.5]), np.array([1.0, -0.3])),
+             (2 * np.pi * 120, 0.02, np.array([0.4, 1.0]), np.array([0.2, 1.0]))]
+    G = np.zeros((ny, nu, f.size), dtype=complex)
+    for wn, z, pl, pr in modes:
+        den = s ** 2 + 2 * z * wn * s + wn ** 2
+        G += np.outer(pl, pr)[:, :, None] / den[None, None, :]
+
+    modal, Pm = fdi.frf2modal(fdi.FrfData(G, f), 0, 2, damping="proportional",
+                              initfreq=[50, 120], initdamp=0.01,
+                              feedthrough=False, maxiter=80)
+    order = np.argsort(modal["wn"])
+    assert np.allclose(np.sort(modal["wn"]), [50.0, 120.0], atol=0.1)
+    assert np.allclose(modal["zeta"][order], [0.01, 0.02], atol=1e-3)
+
+    # the identified state-space reproduces the FRF
+    fit = np.moveaxis(np.array([np.asarray(Pm(sk)) for sk in s]), 0, 2)
+    rel = np.abs(fit - G) / np.maximum(np.abs(G), 1e-9)
+    assert np.median(rel) < 1e-6
+
+
 def test_hfrf_matches_control(measurement):
     _, _, Pest = measurement
     Hm, _ = fdi.mlfdi(Pest, 2, 0, 0, 100, 1e-10, 0, "c")

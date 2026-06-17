@@ -3,7 +3,7 @@ import control
 import pytest
 
 import fditools as fdi
-from conftest import true_system, simulate, freqresp_on
+from conftest import true_system, simulate, freqresp_on, mimo_2x2
 
 
 def test_time2bla_matches_frf_for_linear_system():
@@ -30,6 +30,25 @@ def test_time2bla_matches_frf_for_linear_system():
     # nonlinear std (row 4) should be small relative to the response for a
     # linear system
     assert np.median(np.abs(Gbla[3])) < np.median(np.abs(Gbla[0]))
+
+
+def test_time2bla_mimo_linear():
+    # M realizations (each = nu orthogonal experiments), independent noise.
+    M, nu = 3, 2
+    Xl, Yl = [], []
+    true = None
+    for m in range(M):
+        g, ms, harm, X, Y, freq, tr = mimo_2x2(nrofp=6, seed=m, noise=1e-4)
+        true = tr
+        for e in range(X.shape[2]):
+            Xl.append(fdi.pretreat(X[:, :, e], ms.nrofs, harm["fs"], 1, 0)[0])
+            Yl.append(fdi.pretreat(Y[:, :, e], ms.nrofs, harm["fs"], 1, 0)[0])
+    bla = fdi.time2bla_mimo(np.stack(Xl, 2), np.stack(Yl, 2), ms, M)
+    assert bla["G"].response.shape == (2, 2, bla["freq"].size)
+    rel = np.abs(bla["G"].response - true) / np.maximum(np.abs(true), 1e-9)
+    assert np.median(rel) < 0.05
+    # linear plant: nonlinear-distortion level stays near the noise level
+    assert np.median(bla["sG_nl"]) < 5 * np.median(bla["sG_noise"])
 
 
 def test_time2nld_runs():

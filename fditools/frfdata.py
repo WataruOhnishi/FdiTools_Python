@@ -29,9 +29,11 @@ class UserData:
     behaviour of the MATLAB code which adds fields as they are computed.
     """
 
+    # v3.0: ``sG`` is the FRF standard deviation (PS2012 eq.2-38, = sqrt(2)*sCR);
+    # ``nrofp`` is the number of averaged periods M (for confidence bounds).
     __slots__ = (
-        "X", "Y", "FRFn", "sX2", "sY2", "cXY", "sCR", "sGhat",
-        "ms", "cxy", "x", "y",
+        "X", "Y", "FRFn", "sX2", "sY2", "cXY", "sCR", "sG", "nrofp",
+        "ms", "cxy", "x", "y", "method",
     )
 
     def __init__(self, **kwargs):

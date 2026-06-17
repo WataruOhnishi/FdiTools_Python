@@ -53,3 +53,41 @@ def measurement():
 @pytest.fixture(scope="module")
 def P0():
     return true_system()
+
+
+def mimo_2x2(nrofp=6, seed=None, noise=0.0):
+    """A 2x2 modal plant + 2-input multisine, simulated as ``(N, 2, ne)`` data.
+
+    Returns ``(g, ms, harm, X, Y, freq, true)`` where *g[o][i]* are the SISO
+    channels, *X/Y* the (N, 2, ne) experiment arrays, and *true* the (2,2,nl)
+    FRF on the excited lines.  Output noise (per sample) is added when *noise*>0.
+    """
+    w1, w2 = 2 * np.pi * 60, 2 * np.pi * 150
+    g = [[control.tf([w1 ** 2], [1, 2 * 0.02 * w1, w1 ** 2]),
+          control.tf([0.3 * w1 ** 2], [1, 2 * 0.05 * w1, w1 ** 2])],
+         [control.tf([0.2 * w2 ** 2], [1, 2 * 0.04 * w2, w2 ** 2]),
+          control.tf([w2 ** 2], [1, 2 * 0.03 * w2, w2 ** 2])]]
+    harm = dict(fs=5000.0, df=1.0, fl=5.0, fh=400.0, fr=1.02)
+    ms = fdi.multisine(harm, [control.tf([1], [1]), control.tf([1], [1])],
+                       dict(itp="r", ctp="n", dtp="f", gtp="l"))
+    nu = ny = 2
+    ne = ms.x.shape[1]
+    N = nrofp * ms.nrofs
+    T = np.arange(N) / harm["fs"]
+    rng = np.random.default_rng(seed) if seed is not None else None
+    X = np.zeros((N, nu, ne))
+    Y = np.zeros((N, ny, ne))
+    for e in range(ne):
+        Ue = np.tile(ms.x[:, e, :].T, (nrofp, 1))
+        for o in range(ny):
+            yo = np.zeros(N)
+            for i in range(nu):
+                yo += control.forced_response(g[o][i], T, Ue[:, i]).outputs
+            if rng is not None and noise > 0:
+                yo = yo + noise * rng.standard_normal(N)
+            Y[:, o, e] = yo
+        X[:, :, e] = Ue
+    freq = ms.freq[ms.ex]
+    true = np.array([[[complex(g[o][i](1j * 2 * np.pi * fk)) for fk in freq]
+                      for i in range(nu)] for o in range(ny)])
+    return g, ms, harm, X, Y, freq, true

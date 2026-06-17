@@ -56,8 +56,8 @@ def main():
     fig, _ = fdi.bode_fdi(
         [(freq, true), Pest,
          fdi.FrfData(fdi.hfrf(SYS["btls"], freq), freq)],
-        noise=(freq, Pest.userdata.sGhat[:, 0]),
-        labels=["true", "FRF", "BTLS"],
+        unc=(freq, Pest.userdata.sG[:, 0]),
+        legend=["true", "FRF", "BTLS", "sG"],
         title=f"Tutorial 1 qlog ({label})")
     save_fig(fig, "tutorial_1_qlog.png")
     show()

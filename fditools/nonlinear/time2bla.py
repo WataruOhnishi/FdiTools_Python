@@ -1,11 +1,16 @@
-"""Best Linear Approximation of the FRF (port of ``time2bla.m``).
+"""Best Linear Approximation of the FRF (port of ``time2bla.m`` and the
+``@iodata`` MIMO ``time2bla``).
 
-``x``/``y`` hold several realisations (measurements) column-by-column.
+* :func:`time2bla` - SISO matrix core (several realisations column-by-column).
+* :func:`time2bla_mimo` - robust MIMO BLA from ``M`` random-phase realisations,
+  separating the noise level from the stochastic non-linear distortion level.
 """
 
 from __future__ import annotations
 
 import numpy as np
+
+from ..frfdata import FrfData, UserData
 
 
 def time2bla(x, y, fs, fl, fh, df):
@@ -70,3 +75,56 @@ def time2bla(x, y, fs, fl, fh, df):
                               + sY2 / np.abs(Y) ** 2
                               - 2.0 * np.real(cXY / (np.conj(X) * Y)))
     return X, Y, FRF, freq, Gbla, sX2, sY2, cXY
+
+
+def time2bla_mimo(x, y, ms, M):
+    """Robust MIMO Best Linear Approximation (port of ``@iodata/time2bla``).
+
+    Parameters
+    ----------
+    x, y : (N, nch, ne) arrays
+        ``ne = M * nu`` experiments ordered **realization-major** (realization 1
+        with its ``nu`` orthogonal experiments, then realization 2, ...).
+        Each experiment is periodic with >= 2 periods; different realizations
+        use different random phases.
+    ms : multisine (carries the excited lines ``ex``)
+    M : int   number of realizations
+
+    Returns
+    -------
+    dict with ``G`` (:class:`FrfData`, the BLA), ``freq``, ``sG_total``,
+    ``sG_noise``, ``sG_nl`` (= sqrt(max(total^2 - noise^2, 0))), ``M``, ``nrofp``.
+    """
+    from ..nonparametric.time2frf_ml import time2frf_ml
+
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    ne = x.shape[2]
+    if ne % M != 0:
+        raise ValueError(f"ne ({ne}) must be a multiple of M ({M}).")
+    nper = ne // M                                    # experiments per realization
+
+    Gall = Vn = None
+    freq = None
+    nrofp = None
+    for m in range(M):
+        idx = slice(m * nper, (m + 1) * nper)
+        Pm = time2frf_ml(x[:, :, idx], y[:, :, idx], ms)
+        if m == 0:
+            ny, nu, nl = Pm.response.shape
+            Gall = np.zeros((ny, nu, nl, M), dtype=complex)
+            Vn = np.zeros((ny, nu, nl, M))
+            freq = Pm.freq
+            nrofp = Pm.userdata.nrofp
+        Gall[:, :, :, m] = Pm.response
+        Vn[:, :, :, m] = np.asarray(Pm.userdata.sG) ** 2
+
+    Gbla = Gall.mean(axis=3)
+    Vtot = np.var(Gall, axis=3, ddof=1) / M           # var of the mean (noise+NL)
+    Vnoise = Vn.mean(axis=3) / M
+    Vnl = np.maximum(Vtot - Vnoise, 0.0)
+
+    ud = UserData(sG=np.sqrt(Vtot), method="bla", nrofp=nrofp)
+    return {"G": FrfData(Gbla, freq, userdata=ud), "freq": freq,
+            "sG_total": np.sqrt(Vtot), "sG_noise": np.sqrt(Vnoise),
+            "sG_nl": np.sqrt(Vnl), "M": M, "nrofp": nrofp}

@@ -41,8 +41,8 @@ def main():
     Pest_q_del = fdi.fdel_fdi(Pest_q, 100.0, 1000.0)     # keep 1..100 Hz
 
     # Exp 2: linear band 101..296 Hz weighted by inverse S/N from Exp 1
-    sGhat_inv = np.abs(Pest_q.userdata.sGhat[:, 0]) / np.abs(Pest_q.response[0, 0, :])
-    Hampl = fdi.FrfData(sGhat_inv, Pest_q.freq)
+    sG_inv = np.abs(Pest_q.userdata.sG[:, 0]) / np.abs(Pest_q.response[0, 0, :])
+    Hampl = fdi.FrfData(sG_inv, Pest_q.freq)
     h2 = dict(fs=fs, df=1.0, fl=101.0, fh=296.0, fr=1.02)
     Pest_lin = run_experiment(P0, h2, opt_q, Hampl, 20, fs, seed=2)
 
@@ -61,14 +61,14 @@ def main():
 
     fig1, _ = fdi.bode_fdi(
         [(Pest_q.freq, true_single), Pest_q],
-        noise=(Pest_q.freq, Pest_q.userdata.sGhat[:, 0]),
-        labels=["true", "FRF"], title="Single wideband experiment")
+        unc=(Pest_q.freq, Pest_q.userdata.sG[:, 0]),
+        legend=["true", "FRF", "sG"], title="Single wideband experiment")
     save_fig(fig1, "tutorial_2_single.png")
 
     fig2, _ = fdi.bode_fdi(
         [(freq, true), Pest],
-        noise=(freq, Pest.userdata.sGhat[:, 0]),
-        labels=["true", "FRF (combined)"], title="Iterative (3 experiments)")
+        unc=(freq, Pest.userdata.sG[:, 0]),
+        legend=["true", "FRF (combined)", "sG"], title="Iterative (3 experiments)")
     save_fig(fig2, "tutorial_2_iterative.png")
 
     # parametric fit on the combined FRF

@@ -6,6 +6,18 @@ import fditools as fdi
 from conftest import true_system, simulate, freqresp_on, make_measurement
 
 
+def test_frfconf():
+    # large-M / unspecified -> sqrt(-log(1-p))
+    assert np.isclose(fdi.frfconf(0.95), np.sqrt(-np.log(0.05)))
+    # finite M gives a (larger) finite positive factor that ->limit as M grows
+    f20 = fdi.frfconf(0.95, 20)
+    f1e6 = fdi.frfconf(0.95, 1_000_000)
+    assert f20 > fdi.frfconf(0.95)              # F-quantile > chi limit
+    assert np.isclose(f1e6, np.sqrt(-np.log(0.05)), atol=1e-3)
+    with pytest.raises(ValueError):
+        fdi.frfconf(1.0)
+
+
 def test_dbm_and_phs():
     x = np.array([1.0, 10.0, 100.0])
     assert np.allclose(fdi.dbm(x), [0.0, 20.0, 40.0])

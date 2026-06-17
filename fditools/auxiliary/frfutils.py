@@ -9,7 +9,23 @@ import control
 from ..frfdata import FrfData, UserData
 
 # UserData fields that are indexed by frequency line (one row per freq).
-_FREQ_FIELDS = ("X", "Y", "FRFn", "sX2", "sY2", "cXY", "sCR", "sGhat", "cxy")
+_FREQ_FIELDS = ("X", "Y", "FRFn", "sX2", "sY2", "cXY", "sCR", "sG", "cxy")
+
+
+def frfconf(p, M=None):
+    """Confidence-radius factor for a measured FRF (port of ``frfconf.m``).
+
+    The ``100*p%`` circular confidence bound on an FRF averaged from *M* periods
+    has radius ``sigma_Ghat * frfconf(p, M)`` (Pintelon-Schoukens 2012 eq.2-40),
+    with ``sigma_Ghat = UserData.sG``.  ``f = sqrt(F_p(2, 2M-2))``; for ``M < 2``
+    the large-M limit ``sqrt(-log(1-p))`` is used.
+    """
+    if not (0.0 < p < 1.0):
+        raise ValueError("p must be in the open interval (0, 1).")
+    if M is None or not np.isfinite(M) or M < 2:
+        return np.sqrt(-np.log(1.0 - p))
+    nu = 2 * M - 2
+    return np.sqrt((nu / 2.0) * ((1.0 - p) ** (-2.0 / nu) - 1.0))
 
 
 def hfrf(Hm, freq):
@@ -83,40 +99,56 @@ def cr_rao(X, Y, freq, B, A, sX2, sY2, cXY, n, mh, ml, cORd, fs=None):
 
 
 def fdicohere(Pest):
-    """Compute the magnitude-squared coherence of a :class:`FrfData`.
+    """Periodic (ensemble) coherence of a :class:`FrfData` (port of v3.0
+    ``fdicohere.m``).
 
-    Requires that the time-domain data ``x``/``y`` and the multisine ``ms`` are
-    stored in ``UserData`` (as ``time2frf_ml`` does when called with the time
-    flag).  Stores the result in ``UserData.cxy``.
+    Uses the period-by-period DFTs of the stored time data ``x``/``y`` at the
+    excited lines ``ms.ex`` (no Signal Processing Toolbox).  For each output
+    ``o`` and input ``i``::
+
+        gamma^2 = |sum_p Y_{o,p} conj(U_{i,p})|^2
+                  / ((sum_p |U_{i,p}|^2)(sum_p |Y_{o,p}|^2)).
+
+    The result is stored in ``UserData.cxy`` with shape ``(nl, ny, nu)``.
     """
-    from scipy.signal import coherence
-
     ud = Pest.userdata
     ms = ud.ms
     nrofs = ms.nrofs
-    fs = ms.harm.fs
+    # excited fft bins (0-based) aligned with the FRF lines; derived from the
+    # FRF frequencies so it works whether or not ms carries .ex
+    ex = getattr(ms, "ex", None)
+    if ex is None:
+        ex = np.round(np.asarray(Pest.freq) / ms.harm.df).astype(int)
+    else:
+        ex = np.asarray(ex, dtype=int)
+    nl = ex.size
 
     x = np.asarray(ud.x)
     y = np.asarray(ud.y)
-    x = x.reshape(x.shape[0], -1)
-    y = y.reshape(y.shape[0], -1)
+    U = x.reshape(x.shape[0], -1)
+    Y = y.reshape(y.shape[0], -1)
+    nu, ny = U.shape[1], Y.shape[1]
+    M = U.shape[0] // nrofs
+    if M < 2:
+        raise ValueError("fdicohere: need >= 2 periods for coherence.")
 
-    cols = []
-    freq = None
-    for k in range(y.shape[1]):
-        xi = x[:, min(k, x.shape[1] - 1)]
-        freq, cxy = coherence(xi, y[:, k], fs=fs, window="boxcar",
-                              nperseg=nrofs, noverlap=0, nfft=nrofs)
-        cols.append(cxy)
-    cxy = np.column_stack(cols)
+    Up = np.zeros((nl, M, nu), dtype=complex)
+    Yp = np.zeros((nl, M, ny), dtype=complex)
+    for p in range(M):
+        idx = slice(p * nrofs, (p + 1) * nrofs)
+        Up[:, p, :] = np.fft.fft(U[idx, :], axis=0)[ex, :]
+        Yp[:, p, :] = np.fft.fft(Y[idx, :], axis=0)[ex, :]
 
-    ex = getattr(ms, "ex", None)
-    if ex is not None:
-        ud.cxy = cxy[np.asarray(ex, dtype=int), :]
-    else:
-        kmin = int(np.argmin(np.abs(freq - ms.harm.fl)))
-        kmax = int(np.argmin(np.abs(freq - ms.harm.fh)))
-        ud.cxy = cxy[kmin:kmax + 1, :]
+    cxy = np.zeros((nl, ny, nu))
+    for o in range(ny):
+        Yo = Yp[:, :, o]
+        Syy = np.sum(np.abs(Yo) ** 2, axis=1)
+        for i in range(nu):
+            Ui = Up[:, :, i]
+            Suu = np.sum(np.abs(Ui) ** 2, axis=1)
+            Suy = np.sum(Yo * np.conj(Ui), axis=1)
+            cxy[:, o, i] = np.abs(Suy) ** 2 / (Suu * Syy)
+    ud.cxy = cxy
     return Pest
 
 
@@ -145,7 +177,7 @@ def fdel_fdi(sys, fmin, fmax):
     return _delete_freq(sys, kmin, kmax)
 
 
-def fcat_fdi(*args, noise="sGhat"):
+def fcat_fdi(*args, noise="sG"):
     """Concatenate :class:`FrfData` objects, keeping the lower-noise line on
     overlap (port of ``fcat_fdi.m``).
 

@@ -33,7 +33,7 @@ def main():
 
     FRF = {k: fdi.hfrf(v, freq) for k, v in SYS.items()}
     meas = Pest.frf_columns()                       # (nroff, 2)
-    sGhat = Pest.userdata.sGhat
+    sG = Pest.userdata.sG
     FRFn = Pest.userdata.FRFn
 
     titles = ["Motor-side (H11)", "Load-side (H21)"]
@@ -71,7 +71,7 @@ def main():
     save_fig(fig1, "step4_deterministic.png")
 
     fig2 = plt.figure(figsize=(11, 7))
-    bode_panel(fig2, ["ml", "btls", "gtls"], sGhat, "sGhat", "Stochastic estimators")
+    bode_panel(fig2, ["ml", "btls", "gtls"], sG, "sG", "Stochastic estimators")
     save_fig(fig2, "step4_stochastic.png")
 
     show()

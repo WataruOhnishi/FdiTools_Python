@@ -55,7 +55,7 @@ def main():
           f"{np.median(np.abs(fit - true) / np.abs(true)):.2e}")
 
     fig, _ = fdi.bode_fdi([(fb, true), (fb, Hb), (fb, fit)],
-                          labels=["true", "FRF (H1)", "NLS fit"],
+                          legend=["true", "FRF (H1)", "NLS fit"],
                           title=f"Tutorial 1 random ({label})")
     save_fig(fig, "tutorial_1_random.png")
 

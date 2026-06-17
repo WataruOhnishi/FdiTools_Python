@@ -49,7 +49,7 @@ def main():
           f"{np.median(np.abs(fit - true) / np.abs(true)):.2e}")
 
     fig, _ = fdi.bode_fdi([(freq, true), (freq, H), (freq, fit)],
-                          labels=["true", "FRF (H1)", "NLS fit"],
+                          legend=["true", "FRF (H1)", "NLS fit"],
                           title=f"Tutorial 1 chirp ({label})")
     save_fig(fig, "tutorial_1_chirp.png")
     show()
