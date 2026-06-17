@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples_Tutorials_SISO</title>
+<style>
+body{font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+     line-height:1.7;max-width:860px;margin:24px auto;padding:0 20px;color:#1b1f24;}
+h1{font-size:22px;border-bottom:3px solid #0366d6;padding-bottom:6px;}
+h2{font-size:18px;margin-top:26px;border-bottom:1px solid #d0d7de;padding-bottom:3px;}
+h3{font-size:15px;margin-top:18px;color:#0b3d91;}
+code{background:#f3f4f6;padding:1px 4px;border-radius:4px;font-family:Consolas,Menlo,monospace;font-size:90%;}
+pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 12px;overflow:auto;}
+pre code{background:none;padding:0;}
+table{border-collapse:collapse;margin:12px 0;}
+th,td{border:1px solid #d0d7de;padding:6px 9px;text-align:left;font-size:14px;vertical-align:top;}
+th{background:#f3f4f6;}
+img{max-width:100%;height:auto;border:1px solid #eaecef;border-radius:6px;}
+blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid #f0c36d;background:#fff8e6;color:#444;}
+a{color:#0366d6;text-decoration:none;}
+@media print{body{max-width:none;margin:0;font-size:11pt;}
+  h1,h2,h3{page-break-after:avoid;} pre,table,img,blockquote{page-break-inside:avoid;}
+  a{color:#000;text-decoration:none;}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head><body>
+<h1 id="fditools-30-siso-tutorials">FdiTools 3.0 — SISO Tutorials</h1>
+<p>Result gallery for the single-input tutorials. See also
+<a href="Examples_Steps_SISO.html">SISO Steps</a>, <a href="Examples_Steps_MIMO.html">MIMO Steps</a>,
+<a href="Examples_Tutorials_MIMO.html">MIMO Tutorial</a>.</p>
+<hr />
+<h2 id="tutorial-1-chirp-swept-sine-excitation">Tutorial 1 — chirp (swept-sine) excitation</h2>
+<p>Swept-sine time/frequency signal, coherence, and the estimated FRF vs the true
+plant.</p>
+<p><img alt="swept-sine time &amp; frequency" src="../Examples/plot/Tutorial_1_chirp_01.png" />
+<img alt="coherence" src="../Examples/plot/Tutorial_1_chirp_02.png" />
+<img alt="FRF vs true" src="../Examples/plot/Tutorial_1_chirp_03.png" /></p>
+<h2 id="tutorial-1-random-excitation">Tutorial 1 — random excitation</h2>
+<p>Non-periodic random excitation: coherence (good in-band, drops at the
+anti-resonance and out of band) and the estimated FRF.</p>
+<p><img alt="coherence" src="../Examples/plot/Tutorial_1_random_01.png" />
+<img alt="FRF vs true" src="../Examples/plot/Tutorial_1_random_02.png" /></p>
+<h2 id="tutorial-1-quasi-logarithmic-multisine">Tutorial 1 — quasi-logarithmic multisine</h2>
+<p>Quasi-log grid multisine, the time-domain input/output, FRF with noise model,
+the 95% confidence band, and the parametric estimators.</p>
+<p><img alt="multisine crest factors" src="../Examples/plot/Tutorial_1_qlog_01.png" />
+<img alt="excited-line spectra" src="../Examples/plot/Tutorial_1_qlog_02.png" />
+<img alt="input / output time data" src="../Examples/plot/Tutorial_1_qlog_03.png" />
+<img alt="FRF with noise model" src="../Examples/plot/Tutorial_1_qlog_04.png" />
+<img alt="FRF with 95% confidence band" src="../Examples/plot/Tutorial_1_qlog_05.png" />
+<em>The 95% band widens at high frequency where the SNR drops.</em></p>
+<p><img alt="deterministic estimators" src="../Examples/plot/Tutorial_1_qlog_06.png" />
+<img alt="stochastic estimators" src="../Examples/plot/Tutorial_1_qlog_07.png" />
+<img alt="best estimator (BTLS)" src="../Examples/plot/Tutorial_1_qlog_08.png" /></p>
+<hr />
+<h2 id="tutorial-2-iterative-experiment-design-inverse-sn">Tutorial 2 — iterative experiment design (inverse S/N)</h2>
+<p>Three experiments — wideband, then refined via the inverse signal-to-noise
+ratio, then concentrated at high frequency — are merged (<code>fcat_fdi</code>) into one
+low-uncertainty FRF. The crest-factor optimiser converges to CF ≈ 1.69 / 1.95 /
+2.22 for the three designs.</p>
+<p>Excitation designs and per-band FRFs for the three experiments:</p>
+<p><img alt="exp 1 crest factors" src="../Examples/plot/Tutorial_2_iterative_01.png" />
+<img alt="exp 1 spectra" src="../Examples/plot/Tutorial_2_iterative_02.png" />
+<img alt="exp 1 time data" src="../Examples/plot/Tutorial_2_iterative_03.png" />
+<img alt="exp 1 FRF" src="../Examples/plot/Tutorial_2_iterative_04.png" />
+<img alt="exp 2 crest factors" src="../Examples/plot/Tutorial_2_iterative_05.png" />
+<img alt="exp 2 spectra" src="../Examples/plot/Tutorial_2_iterative_06.png" />
+<img alt="exp 2 time data" src="../Examples/plot/Tutorial_2_iterative_07.png" />
+<img alt="exp 2 FRF" src="../Examples/plot/Tutorial_2_iterative_08.png" />
+<img alt="exp 3 crest factors" src="../Examples/plot/Tutorial_2_iterative_09.png" />
+<img alt="exp 3 spectra" src="../Examples/plot/Tutorial_2_iterative_10.png" />
+<img alt="exp 3 time data" src="../Examples/plot/Tutorial_2_iterative_11.png" />
+<img alt="exp 3 FRF" src="../Examples/plot/Tutorial_2_iterative_12.png" /></p>
+<p>Single vs iterative experiment, and the resulting estimation error:</p>
+<p><img alt="single experiment FRF" src="../Examples/plot/Tutorial_2_iterative_13.png" />
+<img alt="estimation error: single vs iterative" src="../Examples/plot/Tutorial_2_iterative_14.png" />
+<em>Key result: the iterative design lowers the estimation error in the targeted
+high-frequency range.</em></p>
+<p>Parametric estimation on the merged FRF:</p>
+<p><img alt="deterministic estimators" src="../Examples/plot/Tutorial_2_iterative_15.png" />
+<img alt="stochastic estimators" src="../Examples/plot/Tutorial_2_iterative_16.png" />
+<img alt="best estimator" src="../Examples/plot/Tutorial_2_iterative_17.png" />
+<em>(GTLS is a rough starting-value estimator and can degenerate; MLE/BTLS are the
+reliable ones.)</em></p>
+<hr />
+<h2 id="tutorial-3-nonlinear-distortions-input-nonlinearity">Tutorial 3 — nonlinear distortions, input nonlinearity</h2>
+<p>Distortion analysis at increasing input amplitudes (and a linear reference).</p>
+<p><img alt="multisine crest factors" src="../Examples/plot/Tutorial_3_nonlinear_in_01.png" />
+<img alt="excited-line spectra" src="../Examples/plot/Tutorial_3_nonlinear_in_02.png" />
+<img alt="noise + NL, input amp 1" src="../Examples/plot/Tutorial_3_nonlinear_in_03.png" />
+<img alt="noise + NL, input amp 0.1" src="../Examples/plot/Tutorial_3_nonlinear_in_04.png" />
+<img alt="noise + NL, input amp 10" src="../Examples/plot/Tutorial_3_nonlinear_in_05.png" />
+<img alt="without noise and nl" src="../Examples/plot/Tutorial_3_nonlinear_in_06.png" /></p>
+<h2 id="tutorial-3-nonlinear-distortions-output-nonlinearity">Tutorial 3 — nonlinear distortions, output nonlinearity</h2>
+<p>Same sweep for an output (Wiener-type) nonlinearity.</p>
+<p><img alt="multisine crest factors" src="../Examples/plot/Tutorial_3_nonlinear_out_01.png" />
+<img alt="excited-line spectra" src="../Examples/plot/Tutorial_3_nonlinear_out_02.png" />
+<img alt="noise + NL, input amp 1" src="../Examples/plot/Tutorial_3_nonlinear_out_03.png" />
+<img alt="noise + NL, input amp 0.1" src="../Examples/plot/Tutorial_3_nonlinear_out_04.png" />
+<img alt="noise + NL, input amp 10" src="../Examples/plot/Tutorial_3_nonlinear_out_05.png" />
+<img alt="without noise and nl" src="../Examples/plot/Tutorial_3_nonlinear_out_06.png" /></p>
+<hr><p style="color:#8a8f98;font-size:12px">Generated from Examples_Tutorials_SISO.md by private-notes/build_html.py — edit the .md, not this file.</p>
+</body></html>

@@ -32,8 +32,7 @@ nh = round(harm.fh/harm.df)+1;          % Highest frequency number
 nrofs = ceil(harm.fs/harm.df);          % Number of time domain samples
 if nrofi > 1, options.itp = 'r'; end    % MIMO experiments need r-phase
 
-% if mod(nrofi,2)~=0, options.otp = 'o';  % don't include 6,12, etc which are not the powers of 2.
-if mod(log2(nrofi),1)~=0, options.otp = 'o';  % Orthogonal multsines (general) 
+if mod(log2(nrofi),1)~=0, options.otp = 'o';  % Orthogonal multsines (general)
 else                options.otp = 'e';  % Hadamard multisines (better cf)
 end
 
@@ -75,8 +74,7 @@ for i=1:nrofi %iは入力数
     X(ex) = Mag(ex);
     for j=1:nrofi %jは実験回数
         switch options.itp
-            case {'r','random'},  X = randph(X,i-1);%入力ごとに違う
-            %case {'r','random'},  X = randph(X,j-1);%実験ごとに違う
+            case {'r','random'},  X = randph(X,i-1);
             case {'s','schroed'}, X = schroed(X);
         end
         switch options.ctp

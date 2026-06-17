@@ -68,19 +68,30 @@ trans = 1;                      % number of transient periods
 trend = 0;                      % period trend removal flag
 r0 = (1:ms.nrofs);                 % time visualization range
 rn = (ms.nrofs*2+1:(2+1)*ms.nrofs);   % data visualization range
-[x,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output_noize,nrofs,harm.fs,trans,trend);
+dat = iodata(output_noize, input, 1/ms.harm.fs, 'Period', ms.nrofs, 'UserData', struct('ms', ms));
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
+time = (0:size(x,1)-1)'*dat.Ts;
 
 figure
 subplot(211), plot(time(r0),x(rn,:))
-    title('input data'), legend('input force'), ylim([-2,2])
+    title('input data'), legend('input force','Location','best'), ylim([-2,2])
 subplot(212), plot(time(r0),y(rn,:))
-    title('output data'), legend('stage position')
+    title('output data'), legend('stage position','Location','best')
     xlabel('time [s]')
 
-Pest = time2frf_ml(x,y,ms);
-bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)]);
-legend('true','estimated frd','noise');
+Pest = time2frf_ml(dat);
+bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)], ...
+    'legend',{'true','estimated frd','noise'});
+
+% 95% circular confidence band on the measured FRF (Pintelon-Schoukens
+% eq.2-40): radius = sigma_Ghat * frfconf(p, M). With the simulated noise and
+% the few averaged periods here, the band is clearly visible.
+p  = 0.95;
+cf = frfconf(p, Pest.UserData.nrofp);
+bode_fdi({P0, Pest(1,1)}, [Pest.freq, cf*Pest.UserData.sG(:,1)], 'style','band', ...
+    'legend', {'true','FRF','95% bound'}, ...
+    'title',  sprintf('FRF with %d%% confidence band (M = %d periods)', round(100*p), Pest.UserData.nrofp));
 
 %% STEP 4: PARAMETRIC ESTIMATION
 % deterministric/stochastic estimation with non-parametric noise model
@@ -108,12 +119,12 @@ freq = Pest.freq;
     FRF.btls = hfrf(SYS.btls,freq);
     FRF.gtls = hfrf(SYS.gtls,freq);
 
-bode_fdi({P0,Pest(1,1),SYS.wls,SYS.nls,SYS.ls},[Pest.freq,Pest.UserData.FRFn(:,1)]);
-legend('TRUE','FRF','WLS','NLS','LS','FRFn');
+bode_fdi({P0,Pest(1,1),SYS.wls,SYS.nls,SYS.ls},[Pest.freq,Pest.UserData.FRFn(:,1)], ...
+    'legend',{'TRUE','FRF','WLS','NLS','LS','FRFn'});
 
-bode_fdi({P0,Pest(1,1),SYS.ml,SYS.btls,SYS.gtls},[Pest.freq,Pest.UserData.sGhat(:,1)]);
-legend('TRUE','FRF','MLE','BTLS','GTLS','sGhat')
+bode_fdi({P0,Pest(1,1),SYS.ml,SYS.btls,SYS.gtls},[Pest.freq,Pest.UserData.sG(:,1)], ...
+    'legend',{'TRUE','FRF','MLE','BTLS','GTLS','sG'});
 
 % best estimator
-bode_fdi({P0,Pest(1,1),SYS.btls},[Pest.freq,Pest.UserData.sGhat(:,1)]);
-legend('TRUE','FRF','BTLS','sGhat')
+bode_fdi({P0,Pest(1,1),SYS.btls},[Pest.freq,Pest.UserData.sG(:,1)], ...
+    'legend',{'TRUE','FRF','BTLS','sG'});

@@ -1,0 +1,100 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAMETRIC ESTIMATION:
+% ----------------------
+% Descr.:   Example of parametric system model estimation
+%           from frequency-domain data with known noise model.
+% System:   Conventional motor-bench with flexible coupling.
+% Author:   Thomas Beauduin, KULeuven, PMA division, 2014
+%           Wataru Ohnishi, The University of Tokyo, 2019
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all; clc;
+load('private/MultisineTypeA.mat');     % schoeder multisine experiment
+
+% Time treatment: build an iodata container, then remove
+% transients/offsets/trends (TypeA carries the multisine ms).
+trans = 1;                      % number of transient periods
+trend = 0;                      % period trend removal flag
+input  = [iq_adx];              % input data to motor bench
+output = [theta_mx,-theta_my];  % output data of motor bench
+
+dat = iodata(output, input, 1/ms.harm.fs, 'Period', ms.nrofs, 'UserData', struct('ms', ms));
+dat.InputName  = {'iq'};
+dat.OutputName = {'theta_m','theta_l'};
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+
+% Non-parametric estimation of frf matrix data
+Pest = time2frf_ml(dat);
+
+%% STEP 4: PARAMETRIC ESTIMATION
+% deterministric/stochastic estimation with non-parametric noise model
+n=4;                        % model order of denominator polynomial
+mh=[2,0].'; ml=[0,0].';     % model orders of numerator polynomial
+relvar = 1e-10;             % relative variation of costfunction (stop)
+iter = 5e2;                 % maximum number of iterations (stop)
+GN = 0;                     % Levenberg-Marquardt optimization
+cORd = 'c';                 % continuous model identifaction
+FRF_W = ones(size(squeeze(Pest.resp)));   % least squares weighting function
+relax = 1;                  % relaxation factor for btls estimation
+freq = Pest.freq;
+
+% Deterministic methods: non-linear least squares
+[SYS.nls,SYS.wls] = nlsfdi(Pest,FRF_W,n,mh,ml,iter,relvar,GN,cORd);
+    FRF.nls = hfrf(SYS.nls,freq);
+    FRF.wls = hfrf(SYS.wls,freq);
+% Stochastic methods: maximum likelihood estimation
+[SYS.ml,SYS.ls]  = mlfdi(Pest,n,mh,ml,iter,relvar,GN,cORd);
+    FRF.ml = hfrf(SYS.ml,freq);
+    FRF.ls = hfrf(SYS.ls,freq);
+
+% Stochastic methods: bootstrapped total least squares
+[SYS.btls,SYS.gtls] = btlsfdi(Pest,n,mh,ml,relax,iter,relvar,cORd);
+    FRF.btls = hfrf(SYS.btls,freq);
+    FRF.gtls = hfrf(SYS.gtls,freq);
+
+figure('Name','Deterministic Estimators')
+subplot(221), semilogx(freq,[dbm(squeeze(Pest.resp(1,1,:))),dbm(FRF.wls(:,1)),dbm(FRF.nls(:,1))])
+hold on, semilogx(freq,dbm(FRF.ls(:,1)),'k--')    % starting values
+hold on, semilogx(freq,dbm(Pest.UserData.FRFn(:,1)),'m--')      % uncertainty level
+    ylabel('Amplitude [dB]') 
+    legend('FRF','WLS','NLS','LS','FRFn','Location','best');
+    xlim([10,300])
+subplot(223), semilogx(freq,[phs(squeeze(Pest.resp(1,1,:))),phs(FRF.wls(:,1)),phs(FRF.nls(:,1))])
+hold on, semilogx(freq,phs(FRF.ls(:,1)),'k--')    % starting values
+    ylabel('Phase [deg]')
+    xlabel('frequency [Hz]')
+    xlim([10,300])
+subplot(222), semilogx(freq,[dbm(squeeze(Pest.resp(2,1,:))),dbm(FRF.wls(:,2)),dbm(FRF.nls(:,2))])
+hold on, semilogx(freq,dbm(FRF.ls(:,2)),'k--')    % starting values
+hold on, semilogx(freq,dbm(Pest.UserData.FRFn(:,2)),'m--')      % uncertainty level
+    ylabel('Amplitude [dB]') 
+    legend('FRF','WLS','NLS','LS','FRFn','Location','best');
+    xlim([10,300])
+subplot(224), semilogx(freq,[phs(squeeze(Pest.resp(2,1,:))),phs(FRF.wls(:,2)),phs(FRF.nls(:,2))])
+hold on, semilogx(freq,phs(FRF.ls(:,2)),'k--')    % starting values
+    ylabel('Phase [deg]')
+    xlabel('frequency [Hz]')
+    xlim([10,300])
+    
+figure('Name','Stochastic Estimators')
+subplot(221), semilogx(freq,[dbm(squeeze(Pest.resp(1,1,:))),dbm(FRF.ml(:,1)),dbm(FRF.btls(:,1))])
+hold on, semilogx(freq,dbm(FRF.gtls(:,1)),'k--')  % starting values
+hold on, semilogx(freq,dbm(Pest.UserData.sG(:,1)),'m--')       % uncertainty lowerbound
+    ylabel('Amplitude [dB]')
+    legend('FRF','MLE','BTLS','GTLS','sG','Location','best');
+    xlim([10,300])
+subplot(223), semilogx(freq,[phs(squeeze(Pest.resp(1,1,:))),phs(FRF.ml(:,1)),phs(FRF.btls(:,1))])
+hold on, semilogx(freq,phs(FRF.gtls(:,1)),'k--')  % starting values
+    ylabel('Phase [deg]')
+    xlabel('frequency [Hz]')
+    xlim([10,300])    
+subplot(222), semilogx(freq,[dbm(squeeze(Pest.resp(2,1,:))),dbm(FRF.ml(:,2)),dbm(FRF.btls(:,2))])
+hold on, semilogx(freq,dbm(FRF.gtls(:,2)),'k--')  % starting values
+hold on, semilogx(freq,dbm(Pest.UserData.sG(:,2)),'m--')       % uncertainty lowerbound
+    ylabel('Amplitude [dB]')
+    legend('FRF','MLE','BTLS','GTLS','sG','Location','best');
+    xlim([10,300])
+subplot(224), semilogx(freq,[phs(squeeze(Pest.resp(2,1,:))),phs(FRF.ml(:,2)),phs(FRF.btls(:,2))])
+hold on, semilogx(freq,phs(FRF.gtls(:,2)),'k--')  % starting values
+    ylabel('Phase [deg]')
+    xlabel('frequency [Hz]')
+    xlim([10,300])    

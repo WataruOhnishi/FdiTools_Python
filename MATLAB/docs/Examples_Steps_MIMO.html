@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples_Steps_MIMO</title>
+<style>
+body{font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+     line-height:1.7;max-width:860px;margin:24px auto;padding:0 20px;color:#1b1f24;}
+h1{font-size:22px;border-bottom:3px solid #0366d6;padding-bottom:6px;}
+h2{font-size:18px;margin-top:26px;border-bottom:1px solid #d0d7de;padding-bottom:3px;}
+h3{font-size:15px;margin-top:18px;color:#0b3d91;}
+code{background:#f3f4f6;padding:1px 4px;border-radius:4px;font-family:Consolas,Menlo,monospace;font-size:90%;}
+pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 12px;overflow:auto;}
+pre code{background:none;padding:0;}
+table{border-collapse:collapse;margin:12px 0;}
+th,td{border:1px solid #d0d7de;padding:6px 9px;text-align:left;font-size:14px;vertical-align:top;}
+th{background:#f3f4f6;}
+img{max-width:100%;height:auto;border:1px solid #eaecef;border-radius:6px;}
+blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid #f0c36d;background:#fff8e6;color:#444;}
+a{color:#0366d6;text-decoration:none;}
+@media print{body{max-width:none;margin:0;font-size:11pt;}
+  h1,h2,h3{page-break-after:avoid;} pre,table,img,blockquote{page-break-inside:avoid;}
+  a{color:#000;text-decoration:none;}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head><body>
+<h1 id="fditools-30-mimo-step-examples">FdiTools 3.0 — MIMO Step examples</h1>
+<p>Result gallery for the multi-input workflow (<code>Examples/Step_MIMO1</code> … <code>Step_MIMO6</code>),
+on the shared 2×2 rank-one modal benchmark <code>mimobench</code> (modes ≈ 40 / 95 / 180 Hz).
+See also <a href="Examples_Steps_SISO.html">SISO Steps</a>,
+<a href="Examples_Tutorials_SISO.html">SISO Tutorials</a>, <a href="Examples_Tutorials_MIMO.html">MIMO Tutorial</a>.</p>
+<hr />
+<h2 id="step-mimo-1-excitation-design-orthogonal-zippered">Step MIMO 1 — Excitation design (orthogonal &amp; zippered)</h2>
+<p>Orthogonal (Hadamard) multisine over <code>n_in</code> experiments, plus the single-record
+zippered design where each input owns interleaved excited lines.</p>
+<p><img alt="orthogonal multisine: time domain" src="../Examples/plot/Step_MIMO1_ExcitationDesign_01.png" />
+<img alt="orthogonal multisine: spectra" src="../Examples/plot/Step_MIMO1_ExcitationDesign_02.png" />
+<img alt="zippered multisine" src="../Examples/plot/Step_MIMO1_ExcitationDesign_03.png" />
+<em>The spectra are flat across the excited lines (the y-axis auto-zooms to
+floating-point level because every line has identical amplitude).</em></p>
+<hr />
+<h2 id="step-mimo-2-full-22-frf-orthogonal-zippered-confidence-band">Step MIMO 2 — Full 2×2 FRF (orthogonal &amp; zippered) + confidence band</h2>
+<p>Orthogonal multi-experiment and single zippered estimates both recover the full
+2×2 FRF (<code>time2frf_ml</code>); the per-entry 95% confidence band comes from <code>sG</code>.</p>
+<p><img alt="2×2 FRF: orthogonal vs zippered vs true" src="../Examples/plot/Step_MIMO2_NonparametricFRF_01.png" />
+<img alt="2×2 FRF with 95% confidence band" src="../Examples/plot/Step_MIMO2_NonparametricFRF_02.png" /></p>
+<hr />
+<h2 id="step-mimo-3-mimo-lpm-positioning">Step MIMO 3 — MIMO LPM (positioning)</h2>
+<p>Orthogonal, full-resolution MIMO LPM from short, transient-corrupted records.
+The main resonances (incl. the 40 Hz peak in G₁₁) are captured, and the LPM
+error matches settled-ML while ML-with-transient is far worse.</p>
+<p><img alt="experiment: start-up transient, shaded periods" src="../Examples/plot/Step_MIMO3_NonparametricFRF_LPM_positioning_01.png" />
+<img alt="2×2 FRF: LPM vs ML" src="../Examples/plot/Step_MIMO3_NonparametricFRF_LPM_positioning_02.png" />
+<img alt="2×2 FRF error vs true" src="../Examples/plot/Step_MIMO3_NonparametricFRF_LPM_positioning_03.png" /></p>
+<hr />
+<h2 id="step-mimo-4-nonlinear-distortions-robust-bla">Step MIMO 4 — Nonlinear distortions (robust BLA)</h2>
+<p>M independent random-phase realizations → Best Linear Approximation. The scatter
+across realizations (total) minus the scatter across periods (noise) gives the
+stochastic nonlinear distortion level, which here dominates the noise by
+20–30 dB.</p>
+<p><img alt="BLA vs true linear plant" src="../Examples/plot/Step_MIMO4_NonlinearDistortions_01.png" />
+<img alt="noise vs nonlinear distortion levels" src="../Examples/plot/Step_MIMO4_NonlinearDistortions_02.png" />
+<em>Per entry: |BLA|, total std, nonlinear std and noise std — nonlinear ≫ noise.</em></p>
+<hr />
+<h2 id="step-mimo-5-structured-modal-identification">Step MIMO 5 — Structured modal identification</h2>
+<p><code>frf2modal</code> (rank-one residues, two-stage additive→modal, van der Hulst et al.
+MSSP 2026) fits a modal model to the 2×2 FRF; it overlays the true plant and the
+nonparametric FRF.</p>
+<p><img alt="2×2 structured modal identification" src="../Examples/plot/Step_MIMO5_ParametricEstimation_01.png" /></p>
+<hr />
+<h2 id="step-mimo-6-model-selection-validation">Step MIMO 6 — Model selection &amp; validation</h2>
+<p>Sweep the number of flexible modes (the noise-normalized cost drops to its floor
+at the true count of 3), then validate: the modeling error sits at the FRF
+uncertainty σ_G across frequency.</p>
+<p><img alt="order selection: cost vs #modes" src="../Examples/plot/Step_MIMO6_SelectionValidation_01.png" />
+<img alt="selected modal model vs FRF" src="../Examples/plot/Step_MIMO6_SelectionValidation_02.png" />
+<img alt="residual validation: error vs uncertainty" src="../Examples/plot/Step_MIMO6_SelectionValidation_03.png" /></p>
+<pre><code>--- identified modal parameters (selected order = 3) ---
+ mode |  wn_true   wn_est [Hz] |  z_true    z_est
+   1  |    40.00     40.00     |  0.010    0.010
+   2  |    95.00     95.00     |  0.015    0.015
+   3  |   180.00    179.98     |  0.020    0.020
+modal-model FRF fit vs true : 98.52 %
+noise-normalized cost       : 2.63
+</code></pre>
+<hr><p style="color:#8a8f98;font-size:12px">Generated from Examples_Steps_MIMO.md by private-notes/build_html.py — edit the .md, not this file.</p>
+</body></html>

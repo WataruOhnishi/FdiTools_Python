@@ -46,7 +46,7 @@ for h=1:nrofh
     for m = 1:nrofm
         FRFsys = squeeze(freqresp(SYS_c{m}(o,i),freq*2*pi));
         res = (FRF(:,h)-FRFsys)./sCR(:,h).^0.5;
-        auto_corr = xcorr(res','unbiased').*ac_scale;
+        auto_corr = local_acorr_unbiased(res).*ac_scale;
         frac50(m,h) = length(find(abs(auto_corr(select)) - ...
                               cb50(select) > 0)) / (2*nroff-2)*100;
         frac95(m,h) = length(find(abs(auto_corr(select)) - ...
@@ -60,4 +60,17 @@ for h=1:nrofh
     tag(:,h) = tag(index,h);
 end
 
+end
+
+% ===== local helper (replaces xcorr -> no Signal Processing Toolbox) =========
+function r = local_acorr_unbiased(v)
+% Unbiased autocorrelation of vector V (FFT-based), returned as a ROW vector
+% ordered for lags -(N-1):(N-1). Drop-in for xcorr(v,'unbiased') (matches to
+% machine precision; only abs(.) is used downstream). No toolbox required.
+v    = v(:);
+N    = numel(v);
+nfft = 2*N-1;                          % exact: linear == circular autocorr
+a    = ifft(abs(fft(v,nfft)).^2);      % a(1)=lag0, a(k+1)=lag +k, a(nfft-k+1)=lag -k
+r    = [a(N+1:nfft); a(1:N)].';        % reorder to lags -(N-1)..(N-1), as ROW
+r    = r ./ (N - abs(-(N-1):(N-1)));   % 'unbiased' scaling
 end

@@ -67,23 +67,5 @@ if nargin > 2
 end
 
 
-% % 2. clean phase glitches
-% glitch = 90;
-% for i=3:length(Y)-2
-%     if ( abs(Y(i)-Y(i-1))>glitch || abs(Y(i)-Y(i-2))>glitch ) && ...
-%        ( abs(Y(i)-Y(i+1))>glitch || abs(Y(i)-Y(i+2))>glitch )
-%         %Y(i)=mean([Y(i-3),Y(i-3),Y(i-2),Y(i-2),Y(i-1),Y(i-1),...
-%         %           Y(i+1),Y(i+2),Y(i+3)]);
-%         Y(i)=Y(i-3);
-%     end
-% end
-
-% if abs(Y(i)-Y(i-1)) > abs(Y(j)-Y(j+1))
-%     Y(i:j)=Y(i:j)-abs(Y(i)-Y(i-1));
-% else
-%     Y(i:j)=Y(i:j)-abs(Y(j)-Y(j+1));
-% end
-
-
 end
 

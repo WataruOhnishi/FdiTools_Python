@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: "If you use FdiTools, please cite it."
+title: FdiTools
+abstract: >-
+  Frequency Domain System Identification MATLAB Toolbox: multisine excitation
+  design, non-parametric FRF (ML / Local Polynomial Method), MIMO FRF, nonlinear
+  distortion analysis (BLA), and parametric identification.
+type: software
+version: "3.0"
+date-released: "2026-06-15"
+license: MIT
+authors:
+  - family-names: Ohnishi
+    given-names: Wataru
+    affiliation: The University of Tokyo
+  - family-names: Beauduin
+    given-names: Thomas
+    affiliation: KU Leuven
+repository-code: "https://github.com/WataruOhnishi/FdiTools"
+url: "https://github.com/WataruOhnishi/FdiTools"
+keywords:
+  - system identification
+  - frequency-domain identification
+  - frequency response function
+  - local polynomial method
+  - MIMO
+  - MATLAB
+references:
+  - type: software
+    title: "FdiTools (original, v1–v2.1)"
+    authors:
+      - family-names: Beauduin
+        given-names: Thomas
+        affiliation: KU Leuven
+      - family-names: Ohnishi
+        given-names: Wataru
+        affiliation: The University of Tokyo
+    repository-code: "https://github.com/HoriFujimotoLab/FdiTools"
+  - type: book
+    title: "System Identification: A Frequency Domain Approach"
+    authors:
+      - family-names: Pintelon
+        given-names: Rik
+      - family-names: Schoukens
+        given-names: Johan
+    edition: "2nd"
+    publisher:
+      name: Wiley-IEEE Press
+    year: 2012

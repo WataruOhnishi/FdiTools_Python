@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples_Tutorials_MIMO</title>
+<style>
+body{font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+     line-height:1.7;max-width:860px;margin:24px auto;padding:0 20px;color:#1b1f24;}
+h1{font-size:22px;border-bottom:3px solid #0366d6;padding-bottom:6px;}
+h2{font-size:18px;margin-top:26px;border-bottom:1px solid #d0d7de;padding-bottom:3px;}
+h3{font-size:15px;margin-top:18px;color:#0b3d91;}
+code{background:#f3f4f6;padding:1px 4px;border-radius:4px;font-family:Consolas,Menlo,monospace;font-size:90%;}
+pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 12px;overflow:auto;}
+pre code{background:none;padding:0;}
+table{border-collapse:collapse;margin:12px 0;}
+th,td{border:1px solid #d0d7de;padding:6px 9px;text-align:left;font-size:14px;vertical-align:top;}
+th{background:#f3f4f6;}
+img{max-width:100%;height:auto;border:1px solid #eaecef;border-radius:6px;}
+blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid #f0c36d;background:#fff8e6;color:#444;}
+a{color:#0366d6;text-decoration:none;}
+@media print{body{max-width:none;margin:0;font-size:11pt;}
+  h1,h2,h3{page-break-after:avoid;} pre,table,img,blockquote{page-break-inside:avoid;}
+  a{color:#000;text-decoration:none;}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head><body>
+<h1 id="fditools-30-mimo-tutorial">FdiTools 3.0 — MIMO Tutorial</h1>
+<p>Result gallery for <code>Examples/Tutorial_4_MIMO</code>. This tutorial walks the <strong>full
+multivariable workflow on a single 2×2 plant</strong>: design the excitation, measure
+the FRF two different ways, and fit a structured modal model — using the same
+benchmark (<code>mimobench</code>) and the same routines as the
+<a href="Examples_Steps_MIMO.html">MIMO Step series</a>, so the two can be read side by side.
+See also <a href="Examples_Steps_SISO.html">SISO Steps</a>,
+<a href="Examples_Tutorials_SISO.html">SISO Tutorials</a>.</p>
+<h2 id="benchmark-and-settings">Benchmark and settings</h2>
+<p><code>mimobench</code> is a 2-input/2-output, reciprocal, proportionally-damped modal plant
+with three flexible modes — each a rank-one residue <code>g·φφᵀ</code> over a 2nd-order
+denominator (so it matches the structure that <code>frf2modal</code> targets). The (1,1)
+DC gain is normalised to 0 dB.</p>
+<table>
+<thead>
+<tr>
+<th>mode</th>
+<th>frequency <code>wn</code> [Hz]</th>
+<th>damping <code>ζ</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>40</td>
+<td>0.010</td>
+</tr>
+<tr>
+<td>2</td>
+<td>95</td>
+<td>0.015</td>
+</tr>
+<tr>
+<td>3</td>
+<td>180</td>
+<td>0.020</td>
+</tr>
+</tbody>
+</table>
+<p>Output mode shapes <code>φ = [1 1 1; 0.6 −0.8 0.4]</code> give genuine (rank-one)
+cross-coupling, so the off-diagonal terms <code>G₁₂</code>, <code>G₂₁</code> are physically meaningful
+— not numerical dust.</p>
+<table>
+<thead>
+<tr>
+<th>setting</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sampling <code>fs</code></td>
+<td>2500 Hz</td>
+</tr>
+<tr>
+<td>resolution <code>df</code></td>
+<td>1 Hz</td>
+</tr>
+<tr>
+<td>excited band</td>
+<td>1 – 500 Hz</td>
+</tr>
+<tr>
+<td>periods / transient</td>
+<td><code>nrofp = 5</code> / <code>trans = 1</code></td>
+</tr>
+<tr>
+<td>output noise</td>
+<td><code>1e-3</code> (sets the FRF floor)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="method-a-orthogonal-multisine-multiple-experiments">Method A — orthogonal multisine, multiple experiments</h2>
+<p><code>multisine(nrofi = 2)</code> builds two orthogonal (Hadamard) experiments: in each,
+both inputs are driven with phase patterns that make the input matrix <code>U(2×2)</code>
+invertible at every excited line, so <code>G = Y/U</code> yields the <strong>full 2×2 FRF at every
+line</strong> (full per-channel resolution). This is the MIMO FRF of
+<a href="Examples_Steps_MIMO.html">Step_MIMO2</a>.</p>
+<p><img alt="2×2 FRF, orthogonal multiple experiments" src="../Examples/plot/Tutorial_4_MIMO_01.png" />
+<em>The estimate (orange) overlays the true plant (blue) across the band; only the
+deep anti-resonances and the high-frequency roll-off (low SNR) show scatter.</em></p>
+<hr />
+<h2 id="method-b-zippered-multisine-single-experiment">Method B — zippered multisine, single experiment</h2>
+<p>One record only: input 1 excites the odd excited lines, input 2 the even ones.
+At any excited line a single input is active, so each FRF <strong>column</strong> is read off
+directly; <code>time2frf_ml</code> interpolates each column onto the full grid. One
+experiment instead of two, at the cost of <strong>half</strong> the per-channel resolution.</p>
+<p><img alt="2×2 FRF, zippered single experiment" src="../Examples/plot/Tutorial_4_MIMO_02.png" />
+<em>All four entries — including the off-diagonal cross-terms — track the true
+plant, because <code>mimobench</code> has significant (rank-one) coupling. A resonance
+sharper than the per-channel line spacing would be the limiting factor (see
+<a href="Examples_Steps_MIMO.html">Step_MIMO3</a> for the orthogonal, full-resolution LPM
+alternative used when modes are very sharp).</em></p>
+<hr />
+<h2 id="structured-modal-identification-frf2modal">Structured modal identification (<code>frf2modal</code>)</h2>
+<p><code>mimobench</code> is a proportionally-damped, rank-one modal system, so <code>frf2modal</code>
+recovers the modal parameters <strong>directly from the orthogonal FRF estimate</strong> <code>Pa</code>
+— exactly the Step_MIMO5 flow. The two-stage method first fits an additive model
+(poles by nonlinear LS, residues by variable projection), then projects each
+residue to rank one (SVD) and refines against the FRF
+(van der Hulst et al., <em>MSSP</em> 247 (2026) 113948).</p>
+<p><img alt="2×2 structured modal identification" src="../Examples/plot/Tutorial_4_MIMO_03.png" />
+<em>True plant, nonparametric FRF and the identified modal model overlap across the
+whole band.</em></p>
+<p>Console output (modal parameters and FRF fit — the frequencies and damping are
+recovered essentially exactly):</p>
+<pre><code>--- identified modal parameters ---
+ mode |  wn_true   wn_est [Hz] |  z_true    z_est
+   1  |    40.00     40.00     |  0.010    0.010
+   2  |    95.00     95.00     |  0.015    0.015
+   3  |   180.00    179.99     |  0.020    0.020
+modal model FRF fit vs true : 99.08 %
+</code></pre>
+<p>A second call with <code>'damping','general'</code> fits <strong>complex</strong> mode shapes
+(general-viscous damping, eqs. (2),(6),(46)). It also fits proportionally-damped
+data — the complex mode shapes then come out essentially real — so it is the
+safe default when the damping structure is unknown:</p>
+<pre><code>general-damping wn_est [Hz] : 40.00 94.99 180.00
+general modal FRF fit vs true: 99.06 %
+</code></pre>
+<hr />
+<h3 id="reproduce">Reproduce</h3>
+<pre><code class="language-matlab">cd Examples
+addpath(genpath('../src'))
+Tutorial_4_MIMO          % runs methods A &amp; B + modal identification
+savefigs('Tutorial_4_MIMO')
+</code></pre>
+<h3 id="key-takeaways">Key takeaways</h3>
+<ul>
+<li><strong>Orthogonal vs zippered</strong>: orthogonal needs <code>n_in</code> experiments but gives full
+  resolution; zippered needs one record but halves the per-channel resolution.</li>
+<li><strong>One benchmark, whole pipeline</strong>: the same <code>mimobench</code> and routines as the
+  Step_MIMO series — design → FRF → modal model — so results are directly
+  comparable.</li>
+<li><strong><code>frf2modal</code></strong> recovers physical modal parameters (frequency, damping, rank-one
+  mode shapes) from the measured FRF, with proportional or general-viscous
+  damping.</li>
+</ul>
+<hr><p style="color:#8a8f98;font-size:12px">Generated from Examples_Tutorials_MIMO.md by private-notes/build_html.py — edit the .md, not this file.</p>
+</body></html>

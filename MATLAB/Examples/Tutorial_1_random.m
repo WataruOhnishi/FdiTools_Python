@@ -31,6 +31,8 @@ output_noize = output + output_noise_amp*randn(size(output));
 %% STEP 2: NonparametricFRF
 % remove transient periods, offsets and trends
 input = detrend(input,0);output_noize = detrend(output_noize,0);
+% hold the (aperiodic) experiment in an iodata container (no Period)
+dat = iodata(output_noize, input, 1/fs);
 [txy,freq] = tfestimate(input,output_noize,[],[],[],fs);
 [cxy,freq] = mscohere(input,output_noize,[],[],[],fs);
 Pfrd = frd(txy,freq,'FrequencyUnit','Hz');
@@ -40,10 +42,10 @@ figure; semilogx(freq,cxy); title('coherence');
 if exist('tfestOptions')
     opt = tfestOptions('WeightingFilter',cxy.*freq);
     Pest = tfest(Pfrd,7,4);
-    % data = iddata(output,input,1/fs); 
-    % Pest = tfest(data,7,4); % require system identification toolbox
+    % data = toIddata(dat);  % iodata -> iddata (requires System Identification Toolbox)
+    % Pest = tfest(data,7,4);
     bop = bodeoptions('cstprefs');
     bop.PhaseWrapping = 'on';
     figure; bode(Pfrd,Pest,P0,bop); xlim([1,1000]); % require system identification toolbox
-    legend('estimated FRF','fitted by tfest','TRUE');
+    legend('estimated FRF','fitted by tfest','TRUE','Location','best');
 end

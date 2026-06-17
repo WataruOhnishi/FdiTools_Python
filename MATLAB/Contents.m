@@ -1,6 +1,11 @@
 % Frequency Domain Identification Toolbox
-% Version 8.1 (R2013a) 06-Aug-2016
-%  
+% Version 3.0  15-Jun-2026
+%
+% Data Structure
+%   iodata         - iddata-compatible time-domain data container.
+%                     Works without the System Identification Toolbox;
+%                     toIddata/fromIddata convert when it is available.
+%
 % Excitation Design
 %   multisine       - Multisine excitation generation
 %   msinl2p         - Lp-norm optimization of multisine phase
@@ -19,15 +24,21 @@
 %   time2frf_h1     - Classic least-squares estimation of frf (H1)
 %                     recommended for synchronized arbitrary measurements
 %   time2frf_ml     - Stochastic maximum-likelihood estimation of frf
-%                     recommended for synchronised periodic measurements
+%                     SISO/SIMO, and MIMO via orthogonal multiple-experiment
+%                     or zippered single-experiment multisines (iodata)
+%   time2frf_lpm    - Local Polynomial Method estimation of frf; models the
+%                     transient (periodic: full P-period DFT; or broadband) so
+%                     short, transient-corrupted records can be used. SISO/SIMO,
+%                     and MIMO via orthogonal (full-res) or zippered multisines
 %   time2frf_log    - Non-linear logaritmic estimation of frf (Hlog)
 %                     for non-synchronised or missing data measurements
 %
 % Non-Linear Distortions
 %   time2nld        - Detect the even/odd non-linear contributions
 %                     with random odd-odd multisine measurements.
-%   time2bla        - Reduce the main non-linear contributions
-%                     with multiple random odd/full multisines.
+%   time2bla        - Best Linear Approximation from multiple random-phase
+%                     multisine realizations; separates noise vs nonlinear
+%                     distortion levels (SISO matrix core / MIMO via iodata).
 %
 % Parametric Estimation
 %   lsfdi           - Linear Least Squares analytical estimator
@@ -43,6 +54,10 @@
 %   btlsfdi         - Bootstrapped Total Least Squares estimator
 %                     numerical robust version of maximum-likelihood.
 %   ssfdi           - Subspace Identification for State-Space models.
+%   frf2modal       - Structured modal identification of MIMO systems from FRF
+%                     data (rank-one residues; proportional & general-viscous
+%                     damping; two-stage additive->modal, van der Hulst et
+%                     al., MSSP 2026)
 %
 % Selection-Validation
 %   chi2test        - Chi-Squares test for estimator/model set
@@ -59,6 +74,8 @@
 %   theta2ba        - Transform parameter vector to rational polynomial
 %   ba2theta        - Transform rational polynomial to parameter vector
 %   cr_rao          - Cramer-Rao Lower Bound of parameter covariance matrix
+%   frfconf         - confidence-radius factor for a measured FRF (PS2012 2-40)
+%   bode_fdi        - Bode plot of FRF(s) with optional uncertainty (line/band)
 %
 % Author: Ir. Thomas Beauduin
 % University of Tokyo, Hori-Fujimoto Lab

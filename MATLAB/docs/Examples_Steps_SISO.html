@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examples_Steps_SISO</title>
+<style>
+body{font-family:-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+     line-height:1.7;max-width:860px;margin:24px auto;padding:0 20px;color:#1b1f24;}
+h1{font-size:22px;border-bottom:3px solid #0366d6;padding-bottom:6px;}
+h2{font-size:18px;margin-top:26px;border-bottom:1px solid #d0d7de;padding-bottom:3px;}
+h3{font-size:15px;margin-top:18px;color:#0b3d91;}
+code{background:#f3f4f6;padding:1px 4px;border-radius:4px;font-family:Consolas,Menlo,monospace;font-size:90%;}
+pre{background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:10px 12px;overflow:auto;}
+pre code{background:none;padding:0;}
+table{border-collapse:collapse;margin:12px 0;}
+th,td{border:1px solid #d0d7de;padding:6px 9px;text-align:left;font-size:14px;vertical-align:top;}
+th{background:#f3f4f6;}
+img{max-width:100%;height:auto;border:1px solid #eaecef;border-radius:6px;}
+blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid #f0c36d;background:#fff8e6;color:#444;}
+a{color:#0366d6;text-decoration:none;}
+@media print{body{max-width:none;margin:0;font-size:11pt;}
+  h1,h2,h3{page-break-after:avoid;} pre,table,img,blockquote{page-break-inside:avoid;}
+  a{color:#000;text-decoration:none;}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']]}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head><body>
+<h1 id="fditools-30-sisosimo-step-examples">FdiTools 3.0 — SISO/SIMO Step examples</h1>
+<p>Result gallery for the single-input workflow (<code>Examples/Step_1</code> … <code>Step_6</code>).
+Run an example, then <code>savefigs('&lt;name&gt;')</code> (or <code>export_all_figs</code>) to regenerate the
+images in <code>Examples/plot/</code>. See also <a href="Examples_Steps_MIMO.html">MIMO Steps</a>,
+<a href="Examples_Tutorials_SISO.html">SISO Tutorials</a>, <a href="Examples_Tutorials_MIMO.html">MIMO Tutorial</a>.</p>
+<hr />
+<h2 id="step-1-excitation-design-multisine">Step 1 — Excitation design (multisine)</h2>
+<p>Random/Schroeder multisine design: time signal, excited-line spectrum and crest
+factor. Low crest factor (≈1.4) packs energy efficiently into the excited lines.</p>
+<p><img alt="multisine time signal, CF" src="../Examples/plot/Step_1_ExcitationDesign_01.png" />
+<img alt="multisine variants" src="../Examples/plot/Step_1_ExcitationDesign_02.png" />
+<img alt="multisine variants" src="../Examples/plot/Step_1_ExcitationDesign_03.png" />
+<img alt="multisine variants" src="../Examples/plot/Step_1_ExcitationDesign_04.png" /></p>
+<hr />
+<h2 id="step-2-non-parametric-frf-uncertainty">Step 2 — Non-parametric FRF + uncertainty</h2>
+<p>Periodic maximum-likelihood FRF (<code>time2frf_ml</code>) on the motor bench. The FRF
+standard deviation <code>UserData.sG</code> and the 95% circular confidence band
+(<code>frfconf</code>) quantify the uncertainty; with fewer averaged periods the band
+widens.</p>
+<p><img alt="measured periods / transient removal" src="../Examples/plot/Step_2_NonparametricFRF_01.png" />
+<img alt="motor-side FRF" src="../Examples/plot/Step_2_NonparametricFRF_02.png" />
+<img alt="load-side FRF with σ_G" src="../Examples/plot/Step_2_NonparametricFRF_03.png" />
+<em>Load-side FRF with the FRF standard deviation σ_G (≈40–60 dB below the signal).</em></p>
+<p><img alt="motor-side FRF with 95% confidence band" src="../Examples/plot/Step_2_NonparametricFRF_04.png" />
+<img alt="3-period FRF: wider band" src="../Examples/plot/Step_2_NonparametricFRF_05.png" />
+<em>With only 3 periods the 95% band visibly widens at the anti-resonance.</em></p>
+<hr />
+<h2 id="step-3-local-polynomial-method-lpm-thermal-furnace">Step 3 — Local Polynomial Method (LPM): thermal furnace</h2>
+<p>Heater→temperature (low-pass, time-constant of hours). Starting cold gives a
+long thermal transient; the LPM models it from the non-excited lines, so a
+<strong>short</strong> record gives a low-bias FRF without waiting for settling — while the
+classical ML is biased if the transient is kept.</p>
+<p><strong>How LPM removes the large transient</strong> — in the time domain the cold-start
+transient (0→150 °C) dwarfs the small excitation ripple. But in the P-period DFT
+the transient is a <em>smooth</em> spectral contribution, present at every bin; the
+non-excited bins between the excited lines therefore show the transient alone. A
+low-order polynomial fits it there and is subtracted at each excited line
+(<code>Y0 = Y(K) − t0</code>, <code>Ĝ = Y0/U(K)</code>):</p>
+<p><img alt="LPM principle: removing a large transient" src="img/lpm_principle.svg" /></p>
+<p><strong>Worked example on the simulation</strong> (run <code>Examples/lpm_explained.m</code>). Notation:</p>
+<ul>
+<li><strong>N</strong> = samples per period (<code>N = fs/df</code>; here 200),</li>
+<li><strong>P</strong> = number of periods in the LPM record (the first <code>nL = 4</code> periods used
+  here, so <code>P = 4</code>),</li>
+<li>the analysis is <strong>one PN-point DFT</strong> over that whole block (<code>PN = P·N = 800</code>
+  points) — <em>not</em> a period-by-period transform. On the PN grid the excited
+  lines sit on every <strong>P-th</strong> bin; the <code>P−1</code> bins between them carry the
+  transient only.</li>
+</ul>
+<p>The complex-plane panel (bottom-right) shows, at one excited line <em>K</em>: the
+non-excited neighbours (bins <code>K±m</code>) trace the smooth transient, the polynomial
+gives the transient <code>t0</code> at <em>K</em>, and <code>Y0 = Y(K) − t0</code> is the recovered signal
+(<code>Ĝ = Y0/U(K)</code>).</p>
+<p><img alt="LPM on the thermal simulation: time, PN-DFT, and the local fit in the complex plane" src="img/lpm_explained.png" /></p>
+<p><img alt="experiment: long transient + ripple, shaded periods" src="../Examples/plot/Step_3_NonparametricFRF_LPM_thermal_01.png" />
+<img alt="Furnace FRF: LPM vs ML" src="../Examples/plot/Step_3_NonparametricFRF_LPM_thermal_02.png" />
+<img alt="FRF error and fit" src="../Examples/plot/Step_3_NonparametricFRF_LPM_thermal_03.png" /></p>
+<pre><code>FRF fit vs true plant
+LPM (first 4 periods, transient)   :  99.3 %
+ML  (settled, last 3 periods)      :  46.7 %
+ML  (first periods, transient kept): -589.5 %
+</code></pre>
+<h2 id="step-3-local-polynomial-method-lpm-positioning-stage">Step 3 — Local Polynomial Method (LPM): positioning stage</h2>
+<p>Force→velocity benchmark. From rest the lightly-damped resonances ring; the LPM
+recovers the FRF from the early (transient) periods at a quality comparable to
+ML on the settled periods, and far better than ML with the transient kept.</p>
+<p><img alt="experiment: start-up ringing, shaded periods" src="../Examples/plot/Step_3_NonparametricFRF_LPM_positioning_01.png" />
+<img alt="Stage FRF: LPM vs ML" src="../Examples/plot/Step_3_NonparametricFRF_LPM_positioning_02.png" />
+<img alt="FRF error and fit" src="../Examples/plot/Step_3_NonparametricFRF_LPM_positioning_03.png" /></p>
+<pre><code>FRF fit vs true plant
+LPM (first 3 periods, transient)   :  99.5 %
+ML  (settled, last 2 periods)      : 100.0 %
+ML  (first periods, transient kept):  87.4 %
+</code></pre>
+<hr />
+<h2 id="step-4-nonlinear-distortion-detection">Step 4 — Nonlinear distortion detection</h2>
+<p>Odd-odd random-phase multisine: the output spectrum is split into the linear
+contribution and the even/odd nonlinear distortions and the noise floor. Here
+the distortions sit well below the linear response.</p>
+<p><img alt="even/odd nonlinear distortions vs noise" src="../Examples/plot/Step_4_NonlinearDistortions_01.png" /></p>
+<hr />
+<h2 id="step-5-parametric-estimation">Step 5 — Parametric estimation</h2>
+<p>Deterministic (WLS/NLS/LS) and stochastic (MLE/BTLS/GTLS) single-denominator
+estimators fitted to the FRF; the uncertainty <code>sG</code> bounds the achievable fit.</p>
+<p><img alt="deterministic estimators" src="../Examples/plot/Step_5_ParametricEstimation_01.png" />
+<img alt="stochastic estimators" src="../Examples/plot/Step_5_ParametricEstimation_02.png" /></p>
+<hr />
+<h2 id="step-6-model-selection-validation">Step 6 — Model selection &amp; validation</h2>
+<p>Three independent tests answer two questions: <strong>which estimator is best</strong> and
+<strong>is the model adequate?</strong> The plant is the 2-inertia motor bench (one resonance;
+two outputs θ_m, θ_l), fitted by six estimators (gtls / ls / wls / nls / ml / btls).</p>
+<table>
+<thead>
+<tr>
+<th>test</th>
+<th>what it checks</th>
+<th>yardstick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 — residual whiteness</td>
+<td>the <strong>shape</strong> (correlation) of the residual</td>
+<td>white-noise confidence bounds</td>
+</tr>
+<tr>
+<td>2 — residual cost</td>
+<td>the <strong>level</strong> of the residual (down to the noise?)</td>
+<td>the noise floor (E[V] ≈ F − nθ)</td>
+</tr>
+<tr>
+<td>3 — χ² modeling error</td>
+<td>model error vs the <strong>measurement uncertainty</strong></td>
+<td>the FRF CR bound σ_Ĝ (= sCR)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="test-1-residual-whiteness-one-figure-per-output">Test 1 — residual whiteness (one figure per output)</h3>
+<p>Residual autocorrelation vs lag; <strong>solid black = 95 %</strong> bound, <strong>dashed = 50 %</strong>
+bound; the title reports the fraction of lags exceeding each bound. A <em>white</em>
+residual exceeds the 95 %/50 % bounds only ≈5 %/50 % of the time, so a <strong>small
+exceedance = good</strong> (no left-over, unmodelled dynamics). The bounds widen at
+large lags because fewer samples remain.</p>
+<p><img alt="residual whiteness, output θ_m" src="../Examples/plot/Step_6_SelectionValidation_01.png" />
+<img alt="residual whiteness, output θ_l" src="../Examples/plot/Step_6_SelectionValidation_02.png" /></p>
+<h3 id="test-2-residual-cost-estimator-comparison">Test 2 — residual cost (estimator comparison)</h3>
+<p>One bar per estimator (blue = H₁₁ iq→θ_m, red = H₁₂ iq→θ_l); the <strong>dashed line is
+the noise level</strong>. A bar near the noise floor ⇒ the residual is essentially noise
+(good); well above ⇒ remaining <strong>model error / bias</strong>. Order: <strong>gtls / ls are
+worst</strong> (ls ignores the noise weighting; gtls mis-weights the
+errors-in-variables structure), improving wls → nls → ml → <strong>btls, which reaches
+the noise floor</strong> — exactly as theory predicts (estimators that correctly treat
+input <em>and</em> output noise are efficient).</p>
+<p><img alt="estimator selection: residual cost" src="../Examples/plot/Step_6_SelectionValidation_03.png" /></p>
+<blockquote>
+<p>Test 1 can pass while Test 2 sits slightly above the floor — not a
+contradiction: Test 1 is the residual's <strong>shape</strong>, Test 2 is its <strong>level</strong>
+("no concentrated leftover, but a small broadband error remains").</p>
+</blockquote>
+<h3 id="test-3-2-modeling-error-vs-the-cr-bound-one-figure-per-output">Test 3 — χ² modeling error vs the CR bound (one figure per output)</h3>
+<p>Per frequency, the modeling error <code>|G_model − Ĝ_meas|</code> (coloured) is compared
+with the measurement uncertainty σ_Ĝ (= sCR, <strong>black</strong>). <strong>Below</strong> the black line
+⇒ the error is buried in the measurement noise → <strong>adequate</strong> (cannot do better
+with this data); <strong>above</strong> it ⇒ a systematic model error there. Here the errors
+stay below the CR bound across the band, rising toward it near the resonance (the
+hardest region to fit).</p>
+<p><img alt="χ² modeling error vs CR bound" src="../Examples/plot/Step_6_SelectionValidation_04.png" /></p>
+<h3 id="what-the-cr-bound-is-and-is-not">What the "CR bound" is (and is not)</h3>
+<p>The Cramér–Rao bound is the <strong>lower bound on the variance of an <em>estimate</em></strong>
+(<code>Cov(θ̂) ⪰ Fi⁻¹</code>), fixed by the experiment + noise + model structure. It does
+<strong>not</strong> depend on which estimator you use, and it is <strong>not</strong> the residual. In
+Test 3 the <code>crlb</code> line is the <strong>non-parametric FRF uncertainty</strong> σ_Ĝ (= sCR) —
+the measurement floor against which the model error is judged. (The dashed
+"noise floor" in Test 2 is a <em>different</em> floor: the expected residual cost. Both
+are "floors", but distinct quantities.)</p>
+<h3 id="bottom-line">Bottom line</h3>
+<ul>
+<li><strong>Best estimators: btls / ml</strong> (residual cost closest to the noise floor;
+  residuals white). <strong>Avoid ls / gtls</strong> (large bias).</li>
+<li><strong>Model is adequate</strong>: residuals white (Test 1) and model error ≤ CR bound
+  almost everywhere (Test 3).</li>
+<li><strong>Room to improve</strong>: residual cost slightly above the floor (esp. H₁₁) and the
+  error rises near the resonance → raise the model order <em>n</em>, concentrate
+  excitation around the resonance, or revisit the transient removal.</li>
+<li><strong>Roles</strong>: Test 1 = shape (whiteness), Test 2 = level (down to the noise?),
+  Test 3 = per-frequency, below the measurement uncertainty? All three together
+  justify "the model is adequate".</li>
+</ul>
+<hr><p style="color:#8a8f98;font-size:12px">Generated from Examples_Steps_SISO.md by private-notes/build_html.py — edit the .md, not this file.</p>
+</body></html>

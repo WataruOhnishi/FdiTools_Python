@@ -42,11 +42,13 @@ output_noise_amp = 0.001; % amp of output noise
 output_noize = output + output_noise_amp*randn(size(output));
 
 %% STEP 2: NonparametricFRF
-% remove transient periods, offsets and trends
+% build iodata, then remove transient periods, offsets and trends
 trans = 1;                      % number of transient periods
 trend = 0;                      % period trend removal flag
-[input_pretreat,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[output_pretreat,time] = pretreat(output_noize,nrofs,harm.fs,trans,trend);
+dat = iodata(output_noize, input, 1/harm.fs, 'Period', nrofs);
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+input_pretreat = dat.InputData; output_pretreat = dat.OutputData;
+time = (0:size(input_pretreat,1)-1)'*dat.Ts;
 
 [txy,freq] = tfestimate(input_pretreat,output_pretreat,rectwin(harm.df*harm.fs),0,harm.df*harm.fs,harm.fs);
 [cxy,freq] = mscohere(input_pretreat,output_pretreat,rectwin(harm.df*harm.fs),0,harm.df*harm.fs,harm.fs);
@@ -62,8 +64,8 @@ if exist('tfestOptions')
     opt = tfestOptions('WeightingFilter',cxy.*freq);
     Pest = tfest(Pfrd2,7,4);
     figure; bode(Pfrd,Pest,P0,bop); xlim([1,1000]);
-    legend('estimated FRF','fitted by tfest','TRUE');
+    legend('estimated FRF','fitted by tfest','TRUE','Location','best');
 else
     figure; bode(Pfrd,P0,bop); xlim([1,1000]);
-    legend('estimated FRF','true FRF');
+    legend('estimated FRF','true FRF','Location','best');
 end

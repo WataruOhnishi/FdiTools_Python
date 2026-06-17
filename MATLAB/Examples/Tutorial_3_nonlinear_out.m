@@ -90,8 +90,9 @@ output_noise_free = lsim(mdl.Pv(1,1),input1,t);
 % remove transient periods, offsets and trends
 trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
-[x,time] = pretreat(input1,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output1_noise,nrofs,harm.fs,trans,trend);
+dat = iodata(output1_noise, input1, 1/harm.fs, 'Period', nrofs);
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
 
 % quantify non-linear distortion level in data
 [Yl,freql,Yo,freqo,Ye,freqe,Yn,freqn] = time2nld(x,y,harm.fs,harm.fl,harm.fh,harm.df);
@@ -100,15 +101,16 @@ figure;
 semilogx(freql,dbm(Yl(:,1)),'*',freqe,dbm(Ye(:,1)),'*',...
                        freqo,dbm(Yo(:,1)),'*',freqn,dbm(Yn(:,1)),'*');
 ylabel('Magnitude [dB]'), xlim([harm.fl,harm.fh])
-legend('Ylin','Yeven','Yodd','Ynoise')
+legend('Ylin','Yeven','Yodd','Ynoise','Location','best');
 title('with noise and nl with input amp 1');
 
 % input 0.1
 % remove transient periods, offsets and trends
 trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
-[x,time] = pretreat(input2,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output2_noise,nrofs,harm.fs,trans,trend);
+dat = iodata(output2_noise, input2, 1/harm.fs, 'Period', nrofs);
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
 
 % quantify non-linear distortion level in data
 [Yl,freql,Yo,freqo,Ye,freqe,Yn,freqn] = time2nld(x,y,harm.fs,harm.fl,harm.fh,harm.df);
@@ -117,15 +119,16 @@ figure;
 semilogx(freql,dbm(Yl(:,1)),'*',freqe,dbm(Ye(:,1)),'*',...
                        freqo,dbm(Yo(:,1)),'*',freqn,dbm(Yn(:,1)),'*');
 ylabel('Magnitude [dB]'), xlim([harm.fl,harm.fh])
-legend('Ylin','Yeven','Yodd','Ynoise')
+legend('Ylin','Yeven','Yodd','Ynoise','Location','best');
 title('with noise and nl with input amp 0.1');
 
 % input 10
 % remove transient periods, offsets and trends
 trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
-[x,time] = pretreat(input3,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output3_noise,nrofs,harm.fs,trans,trend);
+dat = iodata(output3_noise, input3, 1/harm.fs, 'Period', nrofs);
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
 
 % quantify non-linear distortion level in data
 [Yl,freql,Yo,freqo,Ye,freqe,Yn,freqn] = time2nld(x,y,harm.fs,harm.fl,harm.fh,harm.df);
@@ -134,14 +137,15 @@ figure;
 semilogx(freql,dbm(Yl(:,1)),'*',freqe,dbm(Ye(:,1)),'*',...
                        freqo,dbm(Yo(:,1)),'*',freqn,dbm(Yn(:,1)),'*');
 ylabel('Magnitude [dB]'), xlim([harm.fl,harm.fh])
-legend('Ylin','Yeven','Yodd','Ynoise')
+legend('Ylin','Yeven','Yodd','Ynoise','Location','best');
 title('with noise and nl with input amp 10');
 
 % noise-free condition
 trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
-[x,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output_noise_free,nrofs,harm.fs,trans,trend);
+dat = iodata(output_noise_free, input, 1/harm.fs, 'Period', nrofs);
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
 
 [Yl,freql,Yo,freqo,Ye,freqe,Yn,freqn] = time2nld(x,y,harm.fs,harm.fl,harm.fh,harm.df);
 
@@ -149,6 +153,6 @@ figure;
 semilogx(freql,dbm(Yl(:,1)),'*',freqe,dbm(Ye(:,1)),'*',...
                        freqo,dbm(Yo(:,1)),'*',freqn,dbm(Yn(:,1)),'*');
 ylabel('Magnitude [dB]'), xlim([harm.fl,harm.fh])
-legend('Ylin','Yeven','Yodd','Ynoise');
+legend('Ylin','Yeven','Yodd','Ynoise','Location','best');
 title('without noise and nl');
 

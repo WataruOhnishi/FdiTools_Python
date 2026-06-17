@@ -16,7 +16,7 @@ elseif sum(~idx_frd) == 1
     option = varargin(~idx_frd);
     option = option{1};
 else
-    option.noise = 'sGhat';
+    option.noise = 'sG';
 end
 frddata = varargin(idx_frd);
 
@@ -30,9 +30,7 @@ idx_nofreq = or(idx_nofreq,idx_y);
 
 sysout = frddata{1};
 for k = 2:Nfrd
-    temp = sysout;
     sysout = fcat_fdi_resp(sysout,frddata{k},option);
-    %     sysout = fcat_fdi_UserData(name(~idx_nofreq),sysout,temp,frddata{k});
 end
 
 if isfield(frddata{1}.UserData,'ms') % multisine
@@ -123,51 +121,25 @@ for k = 2:N
     sysout = fcat_fdi_UserData2(vars,sysout,temp,varargin{k});
 end
 
-% if isfield(varargin{1}.UserData,'ms') % multisine
-%     sysout.UserData.ms = cell(1,N);
-%     for k = 1:N
-%         sysout.UserData.ms{k} = varargin{k}.UserData.ms;
-%     end
-% end
-% if isfield(varargin{1}.UserData,'x') % time domain data
-%     sysout.UserData.x = cell(1,N);
-%     sysout.UserData.y = cell(1,N);
-%     for k = 1:N
-%         sysout.UserData.x{k} = varargin{k}.UserData.x;
-%         sysout.UserData.y{k} = varargin{k}.UserData.y;
-%     end
-% end
-
 end
 
 function sysout = fcat_fdi_UserData2(sname,sysin,sys1,sys2)
-N = length(sname);
-for k = 1:N
-    temp1 = getfield(sys1.UserData,sname{k});
-    temp2 = getfield(sys2.UserData,sname{k});
-    freqmerge = [sys1.freq;sys2.freq;];
-    fieldmerge = [temp1;temp2;];
-    [~,I] = sort(freqmerge);
-    fieldmerge = fieldmerge(I,:);
-    %     sysin.UserData = rmfield(sysin.UserData,sname{k});
-    sysin.UserData = setfield(sysin.UserData,sname{k},fieldmerge);
+n1 = numel(sys1.freq);  n2 = numel(sys2.freq);
+for k = 1:numel(sname)
+    f = sname{k};
+    temp1 = sys1.UserData.(f);
+    temp2 = sys2.UserData.(f);
+    % Only frequency-indexed numeric fields (rows == #freq) are merged & sorted;
+    % non-frequency fields (nrofp scalar, method char, ...) keep the first value.
+    if isnumeric(temp1) && isnumeric(temp2) && size(temp1,1)==n1 && size(temp2,1)==n2
+        freqmerge  = [sys1.freq; sys2.freq];
+        fieldmerge = [temp1; temp2];
+        [~,I] = sort(freqmerge);
+        sysin.UserData.(f) = fieldmerge(I,:);
+    else
+        sysin.UserData.(f) = temp1;
+    end
 end
 sysout = sysin;
 end
-
-
-% function sysout = fcat_fdi_UserData(sname,sysin,sys1,sys2)
-% N = length(sname);
-% for k = 1:N
-%     temp1 = getfield(sys1.UserData,sname{k});
-%     temp2 = getfield(sys2.UserData,sname{k});
-%     freqmerge = [sys1.freq;sys2.freq;];
-%     fieldmerge = [temp1;temp2;];
-%     [~,I] = sort(freqmerge);
-%     fieldmerge = fieldmerge(I,:);
-%     %     sysin.UserData = rmfield(sysin.UserData,sname{k});
-%     sysin.UserData = setfield(sysin.UserData,sname{k},fieldmerge);
-% end
-% sysout = sysin;
-% end
 

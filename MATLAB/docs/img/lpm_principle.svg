@@ -1,0 +1,71 @@
+<svg viewBox="0 0 1000 520" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif" role="img">
+<title>Local Polynomial Method: removing a large transient</title>
+<desc>Time domain shows a huge 0 to 150 C transient dwarfing the tiny ripple signal. In the P-period DFT the transient is smooth across frequency; the non-excited bins around each excited line reveal it, a low-order polynomial models it, and subtracting it at the excited line gives the clean FRF.</desc>
+<rect x="0" y="0" width="1000" height="520" fill="#ffffff"/>
+
+<text x="500" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#1b1f24">Local Polynomial Method — removing a large transient  (Step_3 thermal: cold start 0→150°C, P=8 periods)</text>
+
+<!-- ===================== LEFT: time domain ===================== -->
+<text x="60" y="68" font-size="16" font-weight="700" fill="#0b3d91">1) Time domain:  transient  ≫  signal</text>
+<line x1="110" y1="120" x2="110" y2="430" stroke="#57606a" stroke-width="1.5"/>
+<line x1="110" y1="430" x2="430" y2="430" stroke="#57606a" stroke-width="1.5"/>
+<text x="103" y="434" text-anchor="end" font-size="12" fill="#57606a">0°C</text>
+<text x="103" y="150" text-anchor="end" font-size="12" fill="#57606a">150°C</text>
+<text x="270" y="455" text-anchor="middle" font-size="12" fill="#57606a">time  (0 → 4.4 h = 8 periods)</text>
+<path d="M110,430 C175,430 200,180 430,165" fill="none" stroke="#1f6feb" stroke-width="3"/>
+<path d="M300,150 q8,-7 16,0 t16,0 t16,0 t16,0" fill="none" stroke="#e8590c" stroke-width="2"/>
+<text x="120" y="250" font-size="13" fill="#1f6feb" font-weight="600">large transient</text>
+<text x="120" y="268" font-size="13" fill="#1f6feb">(cold start) 0→150°C</text>
+<text x="300" y="135" font-size="12" fill="#e8590c">+ tiny ripple = signal (a few °C)</text>
+<text x="118" y="405" font-size="12.5" fill="#57606a">the transient hides the signal in time</text>
+
+<line x1="455" y1="270" x2="525" y2="270" stroke="#1b1f24" stroke-width="2" marker-end="url(#ar)"/>
+<text x="490" y="258" text-anchor="middle" font-size="12.5" fill="#1b1f24" font-weight="600">P-period DFT</text>
+<text x="490" y="288" text-anchor="middle" font-size="11" fill="#57606a">(PN points)</text>
+
+<!-- ===================== RIGHT: frequency domain ===================== -->
+<text x="540" y="68" font-size="16" font-weight="700" fill="#0b3d91">2) Frequency domain:  model the transient on non-excited bins, subtract</text>
+<line x1="575" y1="120" x2="575" y2="430" stroke="#57606a" stroke-width="1.5"/>
+<line x1="575" y1="430" x2="955" y2="430" stroke="#57606a" stroke-width="1.5"/>
+<text x="568" y="128" text-anchor="end" font-size="12" fill="#57606a">|Y|</text>
+<text x="765" y="455" text-anchor="middle" font-size="12" fill="#57606a">frequency bins  (excited lines every P=8 bins)</text>
+
+<g fill="#9aa4b2">
+  <rect x="623" y="300" width="12" height="130"/>
+  <rect x="688" y="306" width="12" height="124"/>
+  <rect x="830" y="318" width="12" height="112"/>
+  <rect x="895" y="324" width="12" height="106"/>
+</g>
+<rect x="753" y="312" width="14" height="118" fill="#9aa4b2"/>
+<rect x="753" y="150" width="14" height="162" fill="#1f6feb"/>
+
+<path d="M629,300 Q700,305 760,312 T901,324" fill="none" stroke="#e8590c" stroke-width="2.5" stroke-dasharray="7 5"/>
+<circle cx="760" cy="312" r="4" fill="#e8590c"/>
+
+<path d="M780,150 h10 M780,312 h10 M790,150 V312" fill="none" stroke="#1a7f37" stroke-width="2"/>
+<text x="797" y="225" font-size="13" fill="#1a7f37" font-weight="700">Y0 = Y(K) − t0</text>
+<text x="797" y="243" font-size="11.5" fill="#1a7f37">= signal (transient removed)</text>
+
+<text x="700" y="138" font-size="12.5" fill="#1f6feb" font-weight="600">excited line K</text>
+<text x="700" y="154" font-size="11.5" fill="#57606a">Y(K)=signal+transient</text>
+<line x1="744" y1="150" x2="753" y2="150" stroke="#57606a" stroke-width="1"/>
+
+<text x="588" y="345" font-size="11.5" fill="#57606a">non-excited bins</text>
+<text x="588" y="361" font-size="11.5" fill="#57606a">= transient only</text>
+<line x1="618" y1="350" x2="629" y2="332" stroke="#57606a" stroke-width="1"/>
+
+<text x="845" y="295" font-size="11.5" fill="#e8590c" font-weight="600">transient is smooth in freq</text>
+<text x="845" y="311" font-size="11.5" fill="#e8590c">→ fit a low-order polynomial</text>
+<text x="672" y="300" font-size="11.5" fill="#e8590c">t0 (transient at K)</text>
+
+<rect x="575" y="392" width="382" height="30" fill="#f6f8fa" stroke="#d0d7de" rx="5"/>
+<text x="585" y="412" font-size="12.5" fill="#1b1f24">Y(K+m)=Y0·[m=0]+Σ tₛ mˢ   →   Ĝ(ω_K)=Y0 / U(K)</text>
+
+<text x="500" y="498" text-anchor="middle" font-size="13" fill="#1b1f24">Even when huge, the transient is <tspan font-weight="700">smooth in frequency</tspan>: measure it on the empty neighbour bins and subtract at the excited line → <tspan font-weight="700">low-bias FRF from a short record</tspan>.</text>
+
+<defs>
+  <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 Z" fill="#1b1f24"/>
+  </marker>
+</defs>
+</svg>

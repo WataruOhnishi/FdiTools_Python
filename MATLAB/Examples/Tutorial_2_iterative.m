@@ -68,12 +68,13 @@ trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
 r0 = (1:ms.nrofs);                 % time visualization range
 rn = (ms.nrofs*2+1:(2+1)*ms.nrofs);   % data visualization range
-[x,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output,nrofs,harm.fs,trans,trend);
+dat = iodata(output, input, 1/ms.harm.fs, 'Period', ms.nrofs, 'UserData', struct('ms', ms));
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
+time = (0:size(x,1)-1)'*dat.Ts;
 
-Pest = time2frf_ml(x,y,ms);
-bode_fdi({P0,Pest});
-legend('true','estimated frd','sGhat');
+Pest = time2frf_ml(dat);
+bode_fdi({P0,Pest}, 'unc', 'sG', 'legend', {'true','estimated frd','sG'});
 
 disp('----------------------------------------')
 disp('First experiment with wideband excitation')
@@ -100,8 +101,8 @@ options.dtp = 'f';      % signal type:      f=full/ O=odd-odd
 options.gtp = 'q';      % grid type: l=linear/q=quasi-logarithmic
 % Ampliude spectrum:
 nrofi = 1;              % Define number of inputs
-sGhat_inv = frd((abs(squeeze(Pest_qlog.UserData.sGhat))./abs(squeeze(Pest_qlog.resp))),Pest_qlog.freq,'FrequencyUnit','Hz');
-ms = multisine(harm, sGhat_inv, options);
+sG_inv = frd((abs(squeeze(Pest_qlog.UserData.sG))./abs(squeeze(Pest_qlog.resp))),Pest_qlog.freq,'FrequencyUnit','Hz');
+ms = multisine(harm, sG_inv, options);
 
 hfig=figure; sub = 0;
 for ii = 1:nrofi
@@ -139,19 +140,21 @@ trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
 r0 = (1:ms.nrofs);                 % time visualization range
 rn = (ms.nrofs*2+1:(2+1)*ms.nrofs);   % data visualization range
-[x,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output,nrofs,harm.fs,trans,trend);
+dat = iodata(output, input, 1/ms.harm.fs, 'Period', ms.nrofs, 'UserData', struct('ms', ms));
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
+time = (0:size(x,1)-1)'*dat.Ts;
 
 figure
 subplot(211), plot(time(r0),x(rn,:))
-    title('input data'), legend('input force'), ylim([-2,2])
+    title('input data'), legend('input force','Location','best'), ylim([-2,2])
 subplot(212), plot(time(r0),y(rn,:))
-    title('output data'), legend('stage position')
+    title('output data'), legend('stage position','Location','best')
     xlabel('time [s]')
 
-Pest = time2frf_ml(x,y,ms);
-bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)]);
-legend('true','estimated frd','noise');
+Pest = time2frf_ml(dat);
+bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)], ...
+    'legend',{'true','estimated frd','noise'});
 Pest_lin_100_300 = Pest;
 
 disp('----------------------------------------')
@@ -214,19 +217,21 @@ trans = 2;                      % number of transient periods
 trend = 0;                      % period trend removal flag
 r0 = (1:ms.nrofs);                 % time visualization range
 rn = (ms.nrofs*2+1:(2+1)*ms.nrofs);   % data visualization range
-[x,time] = pretreat(input,nrofs,harm.fs,trans,trend);
-[y,time] = pretreat(output,nrofs,harm.fs,trans,trend);
+dat = iodata(output, input, 1/ms.harm.fs, 'Period', ms.nrofs, 'UserData', struct('ms', ms));
+dat = pretreat(dat, 'trans', trans, 'trend', trend);
+x = dat.InputData; y = dat.OutputData;
+time = (0:size(x,1)-1)'*dat.Ts;
 
 figure
 subplot(211), plot(time(r0),x(rn,:))
-    title('input data'), legend('input force'), ylim([-2,2])
+    title('input data'), legend('input force','Location','best'), ylim([-2,2])
 subplot(212), plot(time(r0),y(rn,:))
-    title('output data'), legend('stage position')
+    title('output data'), legend('stage position','Location','best')
     xlabel('time [s]')
 
-Pest = time2frf_ml(x,y,ms);
-bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)]);
-legend('true','estimated frd','noise');
+Pest = time2frf_ml(dat);
+bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.FRFn(:,1)], ...
+    'legend',{'true','estimated frd','noise'});
 Pest_qlog_301_1000 = Pest;
 
 disp('----------------------------------------')
@@ -235,23 +240,21 @@ disp('----------------------------------------')
 
 pause
 %% Connect all experiment
-bode_fdi({P0,Pest_qlog(1,1)},[Pest_qlog.freq,Pest_qlog.UserData.sGhat(:,1)]);
-legend('true','estimated frd','noise');
-title('Single experiment');
+bode_fdi({P0,Pest_qlog(1,1)},[Pest_qlog.freq,Pest_qlog.UserData.sG(:,1)], ...
+    'legend',{'true','estimated frd','noise'}, 'title','Single experiment');
 
 Pest = fcat_fdi(Pest_qlog_del,Pest_lin_100_300,Pest_qlog_301_1000);
-bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.sGhat(:,1)]);
-legend('true','estimated frd','noise');
-title('Iterative experiment');
+bode_fdi({P0,Pest(1,1)},[Pest.freq,Pest.UserData.sG(:,1)], ...
+    'legend',{'true','estimated frd','noise'}, 'title','Iterative experiment');
 
 EstErr_original = 1-P0/Pest_qlog;
 EstErr_after = 1-P0/Pest;
 figure; bodemag(EstErr_original,'r',EstErr_after,'b');
 title('Estimation error');
-legend('Single experiment','Iterative experiment','Location','northwest');
+legend('Single experiment','Iterative experiment','Location','best');
 
 disp('----------------------------------------')
-disp('Connect three expeiment via sGhat')
+disp('Connect three expeiment via sG')
 disp('----------------------------------------')
 
 pause
@@ -281,15 +284,15 @@ freq = Pest.freq;
     FRF.btls = hfrf(SYS.btls,freq);
     FRF.gtls = hfrf(SYS.gtls,freq);
 
-bode_fdi({P0,Pest(1,1),SYS.wls,SYS.nls,SYS.ls},[Pest.freq,Pest.UserData.FRFn(:,1)]);
-legend('TRUE','FRF','WLS','NLS','LS','FRFn');
+bode_fdi({P0,Pest(1,1),SYS.wls,SYS.nls,SYS.ls},[Pest.freq,Pest.UserData.FRFn(:,1)], ...
+    'legend',{'TRUE','FRF','WLS','NLS','LS','FRFn'});
 
-bode_fdi({P0,Pest(1,1),SYS.ml,SYS.btls,SYS.gtls},[Pest.freq,Pest.UserData.sGhat(:,1)]);
-legend('TRUE','FRF','MLE','BTLS','GTLS','sGhat')
+bode_fdi({P0,Pest(1,1),SYS.ml,SYS.btls,SYS.gtls},[Pest.freq,Pest.UserData.sG(:,1)], ...
+    'legend',{'TRUE','FRF','MLE','BTLS','GTLS','sG'});
 
 % best estimator
-bode_fdi({P0,Pest(1,1),SYS.btls},[Pest.freq,Pest.UserData.sGhat(:,1)]);
-legend('TRUE','FRF','BTLS','sGhat')
+bode_fdi({P0,Pest(1,1),SYS.btls},[Pest.freq,Pest.UserData.sG(:,1)], ...
+    'legend',{'TRUE','FRF','BTLS','sG'});
 
 disp('----------------------------------------')
 disp('Parametric estimation')
