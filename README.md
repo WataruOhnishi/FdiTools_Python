@@ -64,7 +64,7 @@ directory (it is the Python equivalent of MATLAB's `addpath`; see
 ### 4. Check that it works
 
 ```bash
-python -c "import fditools; print(fditools.__version__)"   # -> 0.1.0
+python -c "import fditools; print(fditools.__version__)"   # -> 0.2.0
 pytest                                                     # 36 tests should pass
 python examples/step2_nonparametric_frf.py                 # runs an example
 ```
@@ -377,11 +377,13 @@ P0, label = benchmark_plant()   # real model if converted, else synthetic
 * **`frf2modal`** proportional damping uses real mode shapes throughout (the
   correct structure for proportional damping); the general path keeps complex
   shapes as in MATLAB.
-* The **zippered single-experiment LPM** (`nu>1`, one experiment) is not ported —
-  use the orthogonal multiple-experiment design for MIMO LPM (recommended for
-  sharp modes). The zippered path of `time2frf_ml` *is* available.
+* MIMO LPM supports both the **orthogonal** multiple-experiment design
+  (recommended for sharp modes) and the single **zippered** experiment
+  (`u` of shape `(N, nu)`; per-channel resolution 1/nu — handy for smooth /
+  thermal systems where one experiment covers several inputs).
 * The MATLAB **`iodata`** OO container is intentionally not reproduced; MIMO is
-  handled function-style by passing `(N, nch, ne)` arrays.
+  handled function-style by passing `(N, nch, ne)` (orthogonal) or `(N, nu)`
+  (zippered) arrays.
 
 ## License
 

@@ -82,6 +82,58 @@ def _lpm_mimo_orthogonal(u, y, fs, R, n, band, nrofs, ex):
     return FrfData(G, freq, userdata=ud)
 
 
+def _lpm_mimo_zippered(u, y, fs, R, n, band, nrofs, ex):
+    """Single zippered MIMO experiment: per-input SIMO periodic LPM + assemble.
+
+    Each input owns disjoint (interleaved) excited lines; the active input is
+    identified per line, the SIMO LPM is run on its owned lines, and every
+    column is interpolated onto the full grid (per-channel resolution = 1/nu).
+    Useful e.g. for thermal systems (one experiment, several inputs, long
+    transient handled by the LPM).  Returns an ``(ny, nu, nl)`` :class:`FrfData`.
+    """
+    nu = u.shape[1]
+    ny = y.shape[1]
+    df = fs / nrofs
+    freq = ex * df
+    nl = ex.size
+    P = u.shape[0] // nrofs
+
+    Uavg = np.zeros((nl, nu), dtype=complex)
+    for i in range(nu):
+        acc = np.zeros(nrofs, dtype=complex)
+        for p in range(P):
+            acc += np.fft.fft(u[p * nrofs:(p + 1) * nrofs, i])
+        Uavg[:, i] = acc[ex] / P
+    owner = np.argmax(np.abs(Uavg), axis=1)            # input owning each line
+
+    G = np.full((ny, nu, nl), np.nan, dtype=complex)
+    sGm = np.full((ny, nu, nl), np.nan)
+    Tm = np.full((ny, nu, nl), np.nan, dtype=complex)
+    for i in range(nu):
+        idx = np.where(owner == i)[0]
+        if idx.size == 0:
+            continue
+        FRFi, _, sGi, Ti = time2frf_lpm(u[:, i], y, fs, order=R, halfwidth=n,
+                                        period=nrofs, lines=ex[idx])
+        for o in range(ny):
+            G[o, i, idx] = FRFi[:, o]
+            sGm[o, i, idx] = sGi[:, o]
+            Tm[o, i, idx] = Ti[:, o]
+
+    for i in range(nu):                                # interpolate onto full grid
+        fi = np.where(~np.isnan(G[0, i, :]))[0]
+        for o in range(ny):
+            G[o, i, :] = (np.interp(freq, freq[fi], np.real(G[o, i, fi]))
+                          + 1j * np.interp(freq, freq[fi], np.imag(G[o, i, fi])))
+            sGm[o, i, :] = np.interp(freq, freq[fi], sGm[o, i, fi])
+
+    if band is not None:
+        sel = (freq >= band[0]) & (freq <= band[1])
+        freq, G, sGm, Tm = freq[sel], G[:, :, sel], sGm[:, :, sel], Tm[:, :, sel]
+    ud = UserData(sG=sGm, T=Tm, method="lpm")
+    return FrfData(G, freq, userdata=ud)
+
+
 def _lpm_core(U, Y, R, n):
     """Broadband consecutive-bin LPM over grid 0..L-1."""
     L = U.shape[0]
@@ -150,12 +202,14 @@ def time2frf_lpm(u, y, fs, order=2, halfwidth=2, band=None,
         u = u[:, None]
     if y.ndim == 1:
         y = y[:, None]
-    Ntot, nrofi = u.shape
     if u.shape[0] != y.shape[0]:
         raise ValueError("u and y must have equal length.")
-    if nrofi != 1:
-        raise ValueError("Only single-input (SISO/SIMO) data is supported "
-                         "(MIMO LPM is planned).")
+    if u.shape[1] > 1:                                # single zippered MIMO exp.
+        if period is None or lines is None:
+            raise ValueError("zippered MIMO LPM needs 'period' and 'lines'.")
+        return _lpm_mimo_zippered(u, y, fs, int(order), int(halfwidth), band,
+                                  int(period), np.asarray(lines, dtype=int).ravel())
+    Ntot, nrofi = u.shape
     R, n = int(order), int(halfwidth)
     periodic = period is not None and lines is not None
 

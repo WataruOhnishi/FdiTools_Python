@@ -94,6 +94,26 @@ def test_frf2modal_recovers_modes():
     assert np.median(rel) < 1e-6
 
 
+def test_frf2modal_general_damping():
+    ny = nu = 2
+    f = np.linspace(1, 300, 600)
+    s = 1j * 2 * np.pi * f
+    modes = [(2 * np.pi * 55, 0.015, np.array([1.0, 0.6]), np.array([1.0, -0.4])),
+             (2 * np.pi * 130, 0.025, np.array([0.5, 1.0]), np.array([0.3, 1.0]))]
+    G = np.zeros((ny, nu, f.size), dtype=complex)
+    for wn, z, pl, pr in modes:
+        lam = -z * wn + 1j * wn * np.sqrt(1 - z ** 2)
+        Li = np.outer(pl, pr)
+        G += (Li[:, :, None] / (s - lam)[None, None, :]
+              + np.conj(Li)[:, :, None] / (s - np.conj(lam))[None, None, :])
+    modal, Pm = fdi.frf2modal(fdi.FrfData(G, f), 0, 2, damping="general",
+                              initfreq=[55, 130], initdamp=0.02,
+                              feedthrough=False, maxiter=120)
+    assert np.allclose(np.sort(modal["wn"]), [55.0, 130.0], atol=0.1)
+    fit = np.moveaxis(np.array([np.asarray(Pm(sk)) for sk in s]), 0, 2)
+    assert np.median(np.abs(fit - G) / np.maximum(np.abs(G), 1e-9)) < 1e-6
+
+
 def test_hfrf_matches_control(measurement):
     _, _, Pest = measurement
     Hm, _ = fdi.mlfdi(Pest, 2, 0, 0, 100, 1e-10, 0, "c")

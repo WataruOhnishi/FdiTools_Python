@@ -81,6 +81,39 @@ def test_mimo_lpm_orthogonal_handles_transient():
     assert np.median(rel) < 0.02
 
 
+def test_mimo_lpm_zippered():
+    # single zippered experiment: each input owns interleaved lines.
+    # smooth (thermal-like) plant so the per-channel 1/nu resolution suffices.
+    def lp(k, fc):
+        return control.tf([k], [1 / (2 * np.pi * fc), 1])
+    g = [[lp(1.0, 20), lp(0.3, 15)], [lp(0.2, 30), lp(1.0, 40)]]
+    nu = ny = 2
+    fs, df = 2000.0, 1.0
+    nrofs = int(fs / df)
+    ex = np.arange(1, 201)                          # 0-based excited bins 1..200
+    owned = [ex[0::2], ex[1::2]]
+    nrofp = 4
+    N = nrofp * nrofs
+    t = np.arange(N) / fs
+    rng = np.random.default_rng(0)
+    u = np.zeros((N, nu))
+    for i in range(nu):
+        for k in owned[i]:
+            u[:, i] += np.cos(2 * np.pi * k * df * t + rng.uniform(-np.pi, np.pi))
+    y = np.zeros((N, ny))
+    for o in range(ny):
+        for i in range(nu):
+            y[:, o] += control.forced_response(g[o][i], t, u[:, i]).outputs
+    Pz = fdi.time2frf_lpm(u, y, fs, order=2, halfwidth=4, period=nrofs,
+                          lines=ex, band=(2, 198))
+    assert Pz.userdata.method == "lpm"
+    assert Pz.response.shape == (ny, nu, Pz.freq.size)
+    true = np.array([[[complex(g[o][i](1j * 2 * np.pi * f)) for f in Pz.freq]
+                      for i in range(nu)] for o in range(ny)])
+    rel = np.abs(Pz.response - true) / np.maximum(np.abs(true), 1e-9)
+    assert np.median(rel) < 0.05
+
+
 def test_lpm_broadband_runs():
     P0 = true_system()
     fs = 2000.0

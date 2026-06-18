@@ -124,6 +124,9 @@ def time2frf_ml(x, y, ms=None, *, fs=None, fl=None, fh=None, df=None,
     ne = xa.shape[2] if xa.ndim == 3 else 1
     if structured and (nu > 1 or ne > 1):
         return _time2frf_ml_mimo(xa, np.asarray(y, dtype=float), ms, df)
+    if not structured and xa.ndim == 3:
+        raise ValueError("MIMO data (3-D x) requires the structured call "
+                         "time2frf_ml(x, y, ms).")
 
     x = _as2d(x)
     y = _as2d(y)

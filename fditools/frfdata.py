@@ -33,7 +33,7 @@ class UserData:
     # ``nrofp`` is the number of averaged periods M (for confidence bounds).
     __slots__ = (
         "X", "Y", "FRFn", "sX2", "sY2", "cXY", "sCR", "sG", "nrofp",
-        "ms", "cxy", "x", "y", "method",
+        "ms", "cxy", "x", "y", "method", "T",
     )
 
     def __init__(self, **kwargs):

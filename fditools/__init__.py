@@ -44,7 +44,7 @@ from .auxiliary import (ba2theta, theta2ba, ba2hm, hm2ba, tfdata, vectorize_orde
                         f2t, t2f, dbm, phs, hfrf, cr_rao, fdicohere, fdel_fdi,
                         fcat_fdi, frfconf)
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "FrfData", "UserData",
