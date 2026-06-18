@@ -1,5 +1,7 @@
 # FdiTools (Python)
 
+*English | [日本語](README_JP.md)*
+
 Python port of **FdiTools**, the Frequency-Domain System Identification toolbox —
 a Python version of [HoriFujimotoLab/FdiTools](https://github.com/HoriFujimotoLab/FdiTools).
 It mirrors the original MATLAB API and algorithms on top of [`numpy`](https://numpy.org/),
@@ -65,7 +67,7 @@ directory (it is the Python equivalent of MATLAB's `addpath`; see
 
 ```bash
 python -c "import fditools; print(fditools.__version__)"   # -> 0.2.0
-pytest                                                     # 36 tests should pass
+pytest                                                     # 45 tests should pass
 python examples/step2_nonparametric_frf.py                 # runs an example
 ```
 
