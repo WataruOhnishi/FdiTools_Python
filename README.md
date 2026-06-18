@@ -3,8 +3,9 @@
 *English | [日本語](README_JP.md)*
 
 Python port of **FdiTools**, the Frequency-Domain System Identification toolbox —
-a Python version of [HoriFujimotoLab/FdiTools](https://github.com/HoriFujimotoLab/FdiTools).
-It mirrors the original MATLAB API and algorithms on top of [`numpy`](https://numpy.org/),
+a Python version of [WataruOhnishi/FdiTools](https://github.com/WataruOhnishi/FdiTools)
+(the MATLAB toolbox, v3.0).
+It mirrors the MATLAB API and algorithms on top of [`numpy`](https://numpy.org/),
 [`scipy`](https://scipy.org/) and [`python-control`](https://python-control.readthedocs.io/).
 
 > Main reference: R. Pintelon and J. Schoukens, *System Identification: A

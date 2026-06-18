@@ -3,8 +3,8 @@
 *[English](README.md) | 日本語*
 
 周波数領域システム同定ツールボックス **FdiTools** の Python 移植版です
-([HoriFujimotoLab/FdiTools](https://github.com/HoriFujimotoLab/FdiTools) の Python 版)。
-元の MATLAB の API・アルゴリズムを [`numpy`](https://numpy.org/) /
+([WataruOhnishi/FdiTools](https://github.com/WataruOhnishi/FdiTools)(MATLAB 版・v3.0)の Python 版)。
+MATLAB 版の API・アルゴリズムを [`numpy`](https://numpy.org/) /
 [`scipy`](https://scipy.org/) / [`python-control`](https://python-control.readthedocs.io/)
 の上で再現しています。
 
